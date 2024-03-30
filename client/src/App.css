@@ -1,0 +1,296 @@
+.App {
+  text-align: center;
+  overflow-x: hidden;
+
+}
+
+body{
+  font-family: 'Condiment - Regular';
+  background-color: #0096881c;
+}
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-card .ant-card-head-title {
+  display: inline-block;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: 'Condiment - Regular';
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-modal .ant-modal-title {
+  font-family: 'Condiment - Regular';
+  font-size: medium;
+
+
+}
+:where(.css-dev-only-do-not-override-42nv3w).ant-modal .ant-modal-body {
+  font-size: medium;
+  line-height: 1.5714285714285714;
+  word-wrap: break-word;
+  padding: 0;
+  font-family: 'Condiment - Regular';
+
+}
+li {
+  font-size: medium;
+  font-family: 'Condiment - Regular';
+  
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-table-wrapper .ant-table-thead >tr>th:not(:last-child):not(.ant-table-selection-column):not(.ant-table-row-expand-icon-cell):not([colspan])::before, :where(.css-dev-only-do-not-override-1k979oh).ant-table-wrapper .ant-table-thead >tr>td:not(:last-child):not(.ant-table-selection-column):not(.ant-table-row-expand-icon-cell):not([colspan])::before {
+  background-color: #d5d0d1;
+}
+
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-layout .ant-layout-header, :where(.css-dev-only-do-not-override-1k979oh).ant-layout.ant-layout-footer{
+  flex: 0 0 auto;
+  margin-left: -1%;
+  height: 64px;
+  padding: 0 50px;
+  color: rgba(0, 0, 0, 0.88);
+  line-height: 64px;
+  background-color: white;
+}
+
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-btn-primary {
+  color: #fff;
+  background: rgb(0 150 135);
+  box-shadow: 0 2px 0 rgba(5, 145, 255, 0.1);
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-btn-default:not(:disabled):not(.ant-btn-disabled):hover {
+  color: rgb(30, 132, 126);
+  border-color: rgb(30, 132, 126);
+  font-size: small;
+  background: #ffffff;
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-btn-primary:not(:disabled):not(.ant-btn-disabled):active {
+  background: rgb(0 150 135);
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-btn-primary:not(:disabled):not(.ant-btn-disabled):hover {
+  background: rgb(0 150 135);
+  box-shadow: 3 2px 0 rgba(96, 165, 217, 0.1);
+
+}
+
+tbody{
+  text-align: center;
+  border: none;
+}
+
+table {
+    text-indent: initial;
+    border-spacing: 2px;
+    background-color: #fff;
+    font-family: 'Condiment - Regular';
+    padding: 30px;
+    border-collapse: separate;
+    width: auto;
+    border-radius: 8px;
+    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
+
+
+
+}
+:where(.css-dev-only-do-not-override-42nv3w).ant-table-wrapper .ant-table-thead >tr>th, :where(.css-dev-only-do-not-override-42nv3w).ant-table-wrapper .ant-table-thead >tr>td {
+  position: relative;
+  color: rgba(0, 0, 0, 0.88);
+  font-weight: 600;
+  text-align: center;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s ease;
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-pagination .ant-pagination-item-active a {
+  color: #4db6ac;
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-pagination .ant-pagination-item a {
+  display: block;
+  padding: 0px 9px 3px 3px;
+  color: rgba(0, 0, 0, 0.88);
+}
+:where(.css-dev-only-do-not-override-42nv3w).ant-pagination .ant-pagination-item-active a {
+  color: #4db6ac;
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-pagination .ant-pagination-item-active {
+  font-weight: 600;
+  background-color: #ffffff;
+  border-color: #1e847e;
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-pagination .ant-pagination-item-active a {
+  color: #1e847e;
+}
+
+:where(.css-dev-only-do-not-override-42nv3w) a:active {
+  color: #1e847e;
+}
+:where(.css-dev-only-do-not-override-42nv3w) a {
+  color: #1e847e;
+  text-decoration: none;
+  background-color: transparent;
+  outline: none;
+  cursor: pointer;
+  transition: color 0.3s;
+  -webkit-text-decoration-skip: objects;
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-pagination .ant-pagination-item-active:hover a {
+  color: #1e847e;
+}
+:where(.css-dev-only-do-not-override-42nv3w).ant-pagination .ant-pagination-item-active:hover a {
+  color: #1e847e;
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-pagination .ant-pagination-item-active:hover {
+  border-color: #1e847e;
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-table-wrapper .ant-table-tbody >tr >td {
+  transition: background 0.2s, border-color 0.2s;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+:where(.css-dev-only-do-not-override-42nv3w) a {
+  color: #1e847e;
+  text-decoration: none;
+  background-color: transparent;
+  outline: none;
+  cursor: pointer;
+  transition: color 0.3s;
+  -webkit-text-decoration-skip: objects;
+  font-family: 'Condiment - Regular';
+
+}
+
+:where(.css-dev-only-do-not-override-42nv3w) a:hover {
+  color: #1e847e;
+}
+:where(.css-dev-only-do-not-override-42nv3w) a:active {
+  color: #1e847e;
+}
+
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-menu {
+  box-sizing: border-box;
+  margin: 57px auto;
+  padding: 0;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  line-height: 0;
+  list-style: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  margin-bottom: 0;
+  padding-inline-start: 0;
+  outline: none;
+  transition: width 0.3s cubic-bezier(0.2, 0, 0, 1) 0s;
+}
+
+
+@media screen and (max-width: 991px) {
+
+  .ant-layout-content.css-dev-only-do-not-override-42nv3w {
+    position: relative;
+    padding: 13px 48px;
+    margin: 63px 75px;
+    width: 66vw;
+}}
+
+
+@media screen and (min-width: 992px) {
+
+  .ant-layout-content.css-dev-only-do-not-override-42nv3w {
+    flex: auto;
+    color: rgba(0, 0, 0, 0.88);
+    min-height: 0;
+    position: relative;
+    padding: 13px 48px;
+    margin: 60px 220px;
+    width: 66vw;
+  
+}
+}
+
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-menu-dark .ant-menu-item, :where(.css-dev-only-do-not-override-42nv3w).ant-menu-dark>.ant-menu .ant-menu-item, :where(.css-dev-only-do-not-override-42nv3w).ant-menu-dark .ant-menu-submenu-title, :where(.css-dev-only-do-not-override-42nv3w).ant-menu-dark>.ant-menu .ant-menu-submenu-title {
+  color: #ffffff;
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-menu-dark .ant-menu-item-selected, :where(.css-dev-only-do-not-override-42nv3w).ant-menu-dark>.ant-menu .ant-menu-item-selected {
+  background-color: #1f1b1b;
+  border-radius: 0%;
+  width:100%;
+  margin-left: 0px;
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-btn-link {
+  color: #1e847e;
+  font-family: 'Condiment - Regular';
+  font-weight: 500;
+
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-btn-link:not(:disabled):not(.ant-btn-disabled):active {
+  color: #1e847e;
+  font-family: 'Condiment - Regular';
+  font-weight: 600;
+
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-btn-link:not(:disabled):not(.ant-btn-disabled):hover {
+  color: #1e847e;
+  background: transparent;
+  font-family: 'Condiment - Regular';
+  font-weight: 600;
+
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-col {
+  font-family: 'Condiment - Regular';
+  font-size: 14px;
+
+}
+
+:where(.css-dev-only-do-not-override-42nv3w).ant-btn-dashed:not(:disabled):not(.ant-btn-disabled):hover {
+  color: #009688;
+  border-color: #009688;
+  background: #ffffff;
+}
