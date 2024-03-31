@@ -30,7 +30,7 @@ async function connect() {
 connect();
 
 // Use the routes in your application
-app.use('/api', routes);
+app.use(routes);
 
 
 app.listen(5000, () => {

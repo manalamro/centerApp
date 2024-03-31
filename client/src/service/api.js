@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { message } from 'antd';
-export const baseURL = "http://localhost:5000/api";
+export const baseURL = "http://localhost:5000";
 
 
 
