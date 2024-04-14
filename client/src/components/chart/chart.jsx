@@ -45,15 +45,18 @@ const EnrollmentDataCards = () => {
   }, []);
 
   const generatePDF = () => {
-    const isWindowMaximized = window.outerWidth === window.screen.availWidth && window.outerHeight === window.screen.availHeight;
-
+    const isWindowMaximized =
+      window.outerWidth === window.screen.availWidth &&
+      window.outerHeight === window.screen.availHeight;
+  
     if (!isWindowMaximized) {
-      alert("Please maximize your browser window for optimal viewing, then click Generate PDF again.");
+      alert(
+        "Please maximize your browser window for optimal viewing, then click Generate PDF again."
+      );
       return;
-    }
-    else {
+    } else {
       const element = document.getElementById("pdf-content");
-
+  
       // Set background color of the canvas
       const canvasOptions = {
         backgroundColor: "rgb(228, 243, 241)", // Set the background color here
@@ -69,13 +72,17 @@ const EnrollmentDataCards = () => {
         pdf.setFillColor(228, 243, 241);
         pdf.rect(0, 0, width, height, "F");
   
-        pdf.addImage(imgData, "PNG", 20, 10, width - 60, height - 20);
+        // Calculate scaling factor for the content
+        const scaleFactor = (width - 60) / canvas.width;
+  
+        // Add scaled image to PDF
+        pdf.addImage(imgData, "PNG", 20, 10, canvas.width * scaleFactor, canvas.height * scaleFactor);
         pdf.save("enrollment_data.pdf");
       });
-      message.success("your pdf file generated well!")
-
+      message.success("Your PDF file generated successfully!");
     }
   };
+  
   const renderEnrollmentsTable = () => {
     const enrollmentEntries = Object.entries(enrollmentsByMonth);
   
