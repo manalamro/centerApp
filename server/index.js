@@ -2,7 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const authMiddleware = require('./middleware/authMiddleware');
 const app = express();
-const routes = require('./routes/itemsRoute');
+const routes  = require('./routes/itemsRoute');
+
 const cors = require("cors");
 const dotenv = require('dotenv'); // Import dotenv package
 dotenv.config(); // Load .env file
@@ -31,7 +32,6 @@ connect();
 
 // Use the routes in your application
 app.use(routes);
-
 
 app.listen(5000, () => {
     console.log("Server started on port 5000");

@@ -2,8 +2,6 @@ import axios from 'axios';
 import { message } from 'antd';
 export const baseURL = "http://localhost:5000";
 
-
-
 export const managerService = {
   register: async (username, password) => {
     try {
@@ -48,20 +46,7 @@ resetPassword: async (resetToken, newPassword) => {
       throw error.response.data;
     }
   },
-
-  authenticate: async (token) => {
-    try {
-      const response = await axios.get(`${baseURL}/protected`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response.data;
-    }
-  },
-
+  
   changePassword :async (oldPassword, newPassword) => {
     try {
       const token = localStorage.getItem('token');
@@ -80,18 +65,135 @@ resetPassword: async (resetToken, newPassword) => {
   },
 };
 
+export const adminService = {
+  register: async (username, password) => {
+    try {
+      const response = await axios.post(`${baseURL}/register`, { username, password });
+      return response.data;
+    } catch (error) {
+      throw error.response.data;
+    }
+  },
+
+  login: async (username, password) => {
+    try {
+      const response = await axios.post(`${baseURL}/login`, { username, password });
+      return response.data;
+    } catch (error) {
+      throw error.response.data;
+    }
+  },
+  logout: async () => {
+    try {
+      const response = await axios.post(`${baseURL}/logout`);
+      return response.data;
+    } catch (error) {
+      throw error.response.data;
+    }
+  },
+  forgotPassword : async (email) => {
+    try {
+      const response = await axios.post(`${baseURL}/forgot-password`, { email });
+      return response.data;
+    } catch (error) {
+      throw error.response.data;
+    }
+  },
+  resetPassword: async (resetToken, newPassword) => {
+    try {
+      const response = await axios.post(`${baseURL}/reset-password/${resetToken}`, { newPassword });
+      return response.data;
+    } catch (error) {
+      throw error.response.data;
+    }
+  },
+  changePassword :async (oldPassword, newPassword) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${baseURL}/change-password`, {
+        oldPassword,
+        newPassword,
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response.data;
+    }
+  },
+
+// services/adminService.js
+
+  totalsByManager: async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${baseURL}/totals-by-manager`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response.data;
+    }
+  },
+
+ getManagerDetails : async (managerId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${baseURL}/manager/${managerId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching manager details:', error);
+      throw error.response.data;
+    }},
+  
+};
+
 export const courseService = {
-  getCourses: async () => {
+  getCourses : async () => {
     try {
       const token = localStorage.getItem('token'); // Assuming you store the token in localStorage
+
+      if (!token) {
+        return { error: 'No token found. Please log in again.' };
+      }
+
       const response = await axios.get(`${baseURL}/courses`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      return response.data.courses;
+
+      return response.data; // This will return the whole response object, including status
+
     } catch (error) {
-      throw new Error('Failed to fetch courses');
+      // Improved error handling
+      if (error.response) {
+        // Server responded with a status other than 2xx
+        const { status, data } = error.response;
+
+        if (status === 401) {
+          return { error: 'Token expired or invalid. Please log in again.' };
+        } else if (status === 500) {
+          return { error: 'Internal Server Error. Please try again later.' };
+        } else {
+          return { error: data.error || 'An error occurred while fetching courses.' };
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        return { error: 'No response from the server. Please check your internet connection.' };
+      } else {
+        // Something else caused the error
+        return { error: error.message || 'An unexpected error occurred.' };
+      }
     }
   },
 
@@ -106,7 +208,24 @@ export const courseService = {
       });
       return response.data.course;
     } catch (error) {
-      throw new Error('Failed to add course');
+      if (error.response) {
+        // Server responded with a status other than 2xx
+        const { status, data } = error.response;
+
+        if (status === 401) {
+          return { error: 'Token expired or invalid. Please log in again.' };
+        } else if (status === 500) {
+          return { error: 'Internal Server Error. Please try again later.' };
+        } else {
+          return { error: data.error || 'An error occurred while adding the course.' };
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        return { error: 'No response from the server. Please check your internet connection.' };
+      } else {
+        // Something else caused the error
+        return { error: error.message || 'An unexpected error occurred.' };
+      }
     }
   },
 
@@ -121,20 +240,55 @@ export const courseService = {
       });
       return response.data.course;
     } catch (error) {
-      throw new Error('Failed to update course');
+      if (error.response) {
+        // Server responded with a status other than 2xx
+        const {status, data} = error.response;
+
+        if (status === 401) {
+          return {error: 'Token expired or invalid. Please log in again.'};
+        } else if (status === 500) {
+          return {error: 'Internal Server Error. Please try again later.'};
+        } else {
+          return {error: data.error || 'An error occurred while adding the course.'};
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        return {error: 'No response from the server. Please check your internet connection.'};
+      } else {
+        // Something else caused the error
+        return {error: error.message || 'An unexpected error occurred.'};
+      }
     }
   },
 
   deleteCourse: async (courseId) => {
     try {
       const token = localStorage.getItem('token'); // Assuming you store the token in localStorage
-      await axios.delete(`${baseURL}/courses/${courseId}`, {
+    const response =   await axios.delete(`${baseURL}/courses/${courseId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      return response.data.course;
     } catch (error) {
-      throw new Error('Failed to delete course');
+      if (error.response) {
+        // Server responded with a status other than 2xx
+        const {status, data} = error.response;
+
+        if (status === 401) {
+          return {error: 'Token expired or invalid. Please log in again.'};
+        } else if (status === 500) {
+          return {error: 'Internal Server Error. Please try again later.'};
+        } else {
+          return {error: data.error || 'An error occurred while adding the course.'};
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        return {error: 'No response from the server. Please check your internet connection.'};
+      } else {
+        // Something else caused the error
+        return {error: error.message || 'An unexpected error occurred.'};
+      }
     }
   },
 
@@ -162,10 +316,26 @@ export const courseService = {
       });
       return response.data.teachers;
     } catch (error) {
-      throw new Error('Failed to fetch teachers information');
+      if (error.response) {
+        // Server responded with a status other than 2xx
+        const { status, data } = error.response;
+
+        if (status === 401) {
+          throw new Error('Token expired or invalid. Please log in again.');
+        } else if (status === 500) {
+          throw new Error('Internal Server Error. Please try again later.');
+        } else {
+          throw new Error(data.error || 'An error occurred while fetching the data.');
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        throw new Error('No response from the server. Please check your internet connection.');
+      } else {
+        // Something else caused the error
+        throw new Error(error.message || 'An unexpected error occurred.');
+      }
     }
   },
-
 
   searchCoursesByTitle: async (title, token) => {
     try {
@@ -195,19 +365,35 @@ export const courseService = {
 };
 
 export const studentService = {
-  getAllStudents: async (token) => {
+  getAllStudents : async (token) => {
     try {
       const response = await axios.get(`${baseURL}/students`, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
+
+      console.log("getAllStudents Response Data:", response.data);
       return response.data;
     } catch (error) {
-      throw new Error('Failed to fetch students');
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 401) {
+          return { error: 'Token expired or invalid. Please log in again.' };
+        } else if (status === 500) {
+          return { error: 'Internal Server Error. Please try again later.' };
+        } else {
+          return { error: data.error || 'An error occurred while fetching students.' };
+        }
+      } else if (error.request) {
+        return { error: 'No response from the server. Please check your internet connection.' };
+      } else {
+        return { error: error.message || 'An unexpected error occurred.' };
+      }
     }
   },
-
+  
   createStudent: async (studentData, token) => {
     try {
       // Extract enrolled courses from studentData
@@ -231,40 +417,78 @@ export const studentService = {
       });
       return response.data;
     } catch (error) {
-      throw new Error('Failed to add student');
+      if (error.response) {
+        // Server responded with a status other than 2xx
+        const { status, data } = error.response;
+
+        if (status === 401) {
+          return { error: 'Token expired or invalid. Please log in again.' };
+        } else if (status === 500) {
+          return { error: 'Internal Server Error. Please try again later.' };
+        } else {
+          return { error: data.error || 'An error occurred while adding the course.' };
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        return { error: 'No response from the server. Please check your internet connection.' };
+      } else {
+        // Something else caused the error
+        return { error: error.message || 'An unexpected error occurred.' };
+      }
     }
   },
-  
+
   updateStudent: async (studentId, studentData, token) => {
     try {
-      const { name, phone, discount, enrollments } = studentData; // Extract student data from studentData
+      const { name, phone, discount, enrollments } = studentData;
       const response = await axios.put(`${baseURL}/students/${studentId}`, {
         name,
         phone,
         discount,
-        enrollments // Pass enrollments data directly
+        enrollments
       }, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
+
       return response.data;
     } catch (error) {
-      throw new Error('Failed to update student');
+      // Capture detailed error message from backend
+      const errorMessage = error.response?.data?.error || "Failed to update student";
+      throw new Error(errorMessage);
     }
   },
   
-  
-  deleteStudent: async (studentId, token) => {
+ 
+  deleteStudent: async (studentId) => {
     try {
+      const token = localStorage.getItem('token'); // Assuming you store the token in localStorage
       const response = await axios.delete(`${baseURL}/students/${studentId}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
       return response.data;
-    } catch (error) {
-      throw new Error('Failed to delete student');
+    }catch (error) {
+      if (error.response) {
+        // Server responded with a status other than 2xx
+        const {status, data} = error.response;
+
+        if (status === 401) {
+          return {error: 'Token expired or invalid. Please log in again.'};
+        } else if (status === 500) {
+          return {error: 'Internal Server Error. Please try again later.'};
+        } else {
+          return {error: data.error || 'An error occurred while adding the course.'};
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        return {error: 'No response from the server. Please check your internet connection.'};
+      } else {
+        // Something else caused the error
+        return {error: error.message || 'An unexpected error occurred.'};
+      }
     }
   },
 
@@ -276,8 +500,25 @@ export const studentService = {
         }
       });
       return response.data;
-    } catch (error) {
-      throw new Error('Failed to fetch student');
+    }catch (error) {
+      if (error.response) {
+        // Server responded with a status other than 2xx
+        const {status, data} = error.response;
+
+        if (status === 401) {
+          return {error: 'Token expired or invalid. Please log in again.'};
+        } else if (status === 500) {
+          return {error: 'Internal Server Error. Please try again later.'};
+        } else {
+          return {error: data.error || 'An error occurred while adding the course.'};
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        return {error: 'No response from the server. Please check your internet connection.'};
+      } else {
+        // Something else caused the error
+        return {error: error.message || 'An unexpected error occurred.'};
+      }
     }
   },
 
@@ -305,8 +546,8 @@ export const studentService = {
       });
       return response.data.students;
     } catch (error) {
-      message.error('we do not have student with this name');
-      throw error.response.data.error || 'An error occurred while searching for courses.';
+      throw error.response.data.error || 'An error occurred while searching for student.';
+
     }
   },
 };
@@ -314,19 +555,9 @@ export const studentService = {
 export const enrollmentService = {
   // Function to get all enrollments
   getAllEnrollments: async (token) => {
-    try {
-      const response = await axios.get(`${baseURL}/enrollments`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      return response.data;
-    } catch (error) {
-      throw new Error('Failed to fetch enrollments');
-    }
   },
 
-  // Function to create an enrollment
+// Function to create an enrollment
   createEnrollment: async (enrollmentData, token) => {
     try {
       const response = await axios.post(`${baseURL}/enrollments`, enrollmentData, {
@@ -367,7 +598,6 @@ export const enrollmentService = {
     }
   },
 
-  
   // Function to get enrollment by ID
   getEnrollmentById: async (enrollmentId, token) => {
     try {
@@ -403,9 +633,7 @@ export const enrollmentService = {
     throw error;
   }
 },
-
-
-
+  
 getEnrollmentsByMonth: async (token) => {
   try {
     const response = await axios.get(`${baseURL}/enrollments-by-month`, {
@@ -415,12 +643,11 @@ getEnrollmentsByMonth: async (token) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error fetching enrollments by month:', error);
+    
     throw error;
   }
-},
-
- getMostFamousCourse :async (token) => {
+}, 
+getMostFamousCourse :async (token) => {
   try {
     const response = await axios.get(`${baseURL}/most-famous-course`, {
       headers: {
@@ -429,7 +656,6 @@ getEnrollmentsByMonth: async (token) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error fetching most famous course:', error);
     throw error;
   }
 },
@@ -443,12 +669,10 @@ getProfitFromEachCourse :async (token) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error fetching profit from each course:', error);
     throw error;
   }
 },
-
-
+  
 TotalRevenueByMonth :async (token) => {
   try {
     const response = await axios.get(`${baseURL}/total-revenue-by-month`, {
@@ -458,7 +682,6 @@ TotalRevenueByMonth :async (token) => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error fetching total revenue by month:', error);
     throw error;
   }
 },
@@ -467,74 +690,209 @@ TotalRevenueByMonth :async (token) => {
 };
 
 export const centerOperationalCostsService = {
-  getCenterOperationalCosts: async (token) => {
+  // 1. Get Center Operational Costs
+  getCenterOperationalCosts : async (token) => {
     try {
       const response = await axios.get(`${baseURL}/centerOperationalCosts`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-      return response.data; // Assuming response.data contains the entire response
+
+      // Check if response data has the success key and is true
+      if (response.data.success) {
+        console.log("API Response:", response.data.centerOperationalCosts);
+        return { data: response.data.centerOperationalCosts, error: null };
+      } else {
+        return { data: null, error: 'Failed to fetch center operational costs.' };
+      }
+
     } catch (error) {
-      throw new Error('Failed to fetch center operational costs');
+      // Handle different error cases
+      if (error.response) {
+        const { status } = error.response;
+
+        if (status === 401) {
+          return { data: null, error: 'Token expired or invalid. Please log in again.' };
+        } else if (status === 404) {
+          return { data: null, error: 'No center operational costs found.' };
+        } else if (status === 500) {
+          return { data: null, error: 'Internal Server Error. Please try again later.' };
+        } else {
+          return { data: null, error: error.response.data.error || 'An error occurred while fetching the operational costs.' };
+        }
+
+      } else if (error.request) {
+        // No response was received
+        console.error('Error Request:', error.request);
+        return { data: null, error: 'No response from the server. Please check your internet connection.' };
+
+      } else {
+        // Other errors
+        console.error('Error:', error.message);
+        return { data: null, error: error.message || 'An unexpected error occurred.' };
+      }
     }
   },
   
   createCenterOperationalCost: async (monthYear, operations, token) => {
     try {
-      const response = await axios.post(`${baseURL}/centerOperationalCosts`, { monthYear, operations }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      return response.data;
+      const response = await axios.post(
+          `${baseURL}/centerOperationalCosts`,
+          { monthYear, operations },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+      );
+
+      return {
+        success: true,
+        data: response.data,
+        message: response.data.message || 'Center operational cost created successfully.',
+      };
     } catch (error) {
-      throw new Error('Failed to add center operational costs');
+      // Check if the error has a response with a message from the backend
+      if (error.response && error.response.data) {
+        const { status, data } = error.response;
+
+        // Handle specific status codes
+        if (status === 401) {
+          throw new Error(data.message || 'Unauthorized: Invalid or expired token login again');
+        } else if (status === 400) {
+          throw new Error(data.message || 'Validation Error');
+        } else if (status === 500) {
+          throw new Error(data.message || 'Internal Server Error');
+        } else {
+          throw new Error(data.message || 'An unexpected error occurred');
+        }
+      } else {
+        // Handle network or other unexpected errors
+        throw new Error('An unexpected error occurred');
+      }
     }
   },
-
+  
+  // 3. Update Operation
   updateOperation: async (operationId, title, price, token) => {
     try {
-      const response = await axios.put(`${baseURL}/centerOperationalCosts/operation`, { operationId, title, price }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      return response.data;
+      const response = await axios.put(`${baseURL}/centerOperationalCosts/operation`,
+          { operationId, title, price },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
+          }
+      );
+
+      return {
+        success: true,
+        data: response.data,
+        message: 'Operation updated successfully.',
+      };
     } catch (error) {
-      throw new Error('Failed to update operation');
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 401) {
+          return { error: 'Token expired or invalid. Please log in again.' };
+        } else if (status === 404) {
+          return { error: 'Operation not found.' };
+        } else if (status === 400) {
+          return { error: data.message || 'Validation error: Please check your input data.' };
+        } else if (status === 500) {
+          return { error: 'Internal Server Error. Please try again later.' };
+        } else {
+          return { error: data.error || 'An error occurred while updating the operation.' };
+        }
+      } else if (error.request) {
+        return { error: 'No response from the server. Please check your internet connection.' };
+      } else {
+        return { error: error.message || 'An unexpected error occurred.' };
+      }
     }
   },
 
-
+  // 4. Delete Operation
   deleteOperation: async (operationId, token) => {
     try {
-      await axios.delete(`${baseURL}/centerOperationalCosts/operation`, {
-        data: { operationId }, // Send data in the request body for DELETE method
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      return true;
+      const response = await axios.delete(`${baseURL}/centerOperationalCosts/operation`,
+          {
+            data: { operationId }, // Send data in the request body for DELETE method
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+      );
+     return response;
     } catch (error) {
-      throw new Error('Failed to delete operation');
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 401) {
+          // Handle specific token-related errors
+          if (data.error.includes('Token expired')) {
+            return { error: 'Token expired or invalid. Please log in again.' };
+          }
+          return { error: data.error || 'Authentication error. Please log in again.' };
+        } else if (status === 404) {
+          return { error: 'Operation not found.' };
+        } else if (status === 400) {
+          return { error: data.message || 'Validation error: Please check your input data.' };
+        } else if (status === 500) {
+          return { error: 'Internal Server Error. Please try again later.' };
+        } else {
+          return { error: data.error || 'An error occurred while deleting the operation.' };
+        }
+      } else if (error.request) {
+        return { error: 'No response from the server. Please check your internet connection.' };
+      } else {
+        return { error: error.message || 'An unexpected error occurred.' };
+      }
     }
   },
 
+  // 5. Add Operation to Center
   addOperationToCenter: async (centerId, newOperation, token) => {
     try {
-      const response = await axios.post(`${baseURL}/centerOperationalCosts/${centerId}/addOperation`, newOperation, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      return response.data;
+      const response = await axios.post(`${baseURL}/centerOperationalCosts/${centerId}/addOperation`,
+          newOperation,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            }
+          }
+      );
+
+      return response;
+      
     } catch (error) {
-      throw new Error('Failed to add operation to center');
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 401) {
+          return { error: 'Token expired or invalid. Please log in again.' };
+        } else if (status === 404) {
+          return { error: 'Center not found.' };
+        } else if (status === 400) {
+          return { error: data.message || 'Validation error: Please check your input data.' };
+        } else if (status === 500) {
+          return { error: 'Internal Server Error. Please try again later.' };
+        } else {
+          return { error: data.error || 'An error occurred while adding the operation to the center.' };
+        }
+      } else if (error.request) {
+        return { error: 'No response from the server. Please check your internet connection.' };
+      } else {
+        return { error: error.message || 'An unexpected error occurred.' };
+      }
     }
   },
 };
-
 
 
 

@@ -8,9 +8,9 @@ const rootElement = document.getElementById('root');
 // Use createRoot to render your application
 const root = ReactDOM.createRoot(rootElement);
 root.render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <AuthProvider>
       <App />
     </AuthProvider>
-  </React.StrictMode>
+  /*</React.StrictMode>*/
 );

@@ -5,8 +5,7 @@ import SearchComponent from '../../components/courses/searchCourse'
 const Courses = () => {
 
   const {token } = useAuth();
- 
-
+  
 return(
   <>
   <SearchComponent/>

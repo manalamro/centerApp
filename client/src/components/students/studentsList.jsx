@@ -9,9 +9,11 @@ import {
 import { fetchCourses } from "../../utils/coursesOperation";
 import UpdateStudentForm from "./updateStudnet";
 import { addPayment } from "../../utils/enrollmnetUtils";
-import { Table, Button, Modal, Row, Col } from "antd";
+import {Table, Button, Modal, Row, Col, message, Spin} from "antd";
 import AddPaymentForm from "./AddPaymentForm";
 import "./st.css";
+import { useAuth } from "../../hooks/useAuth";
+import {studentService} from '../../service/api';
 
 const StudentList = ({ token }) => {
   const navigate = useNavigate();
@@ -37,75 +39,142 @@ const StudentList = ({ token }) => {
   const [remainingBalanceAfterPayment, setRemainingBalanceAfterPayment] =
     useState(0);
 
+  const { logout } = useAuth();
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      message.error("An error occurred during logout.");
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const studentsData = await fetchStudents(token);
-        setStudents(studentsData);
+      setLoading(true);
+    const fetchStudents = async () => {
+      let token = localStorage.getItem('token');
+      const data = await studentService.getAllStudents(token);
+      if (Array.isArray(data)) {
+        setStudents(data);
         setLoading(false);
-      } catch (error) {
-        setError(error.message);
+      } else {
+        console.log(data.error);
+        message.error(data.error);
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [token]);
+    fetchStudents();
+  }, []);
+
+  const fetchCoursesData = async () => {
+    try {
+      const coursesData = await fetchCourses();
+      setCourses(coursesData);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
 
   useEffect(() => {
-    const fetchCoursesData = async () => {
-      try {
-        const coursesData = await fetchCourses();
-        setCourses(coursesData);
-      } catch (error) {
-        setError(error.message);
-      }
-    };
-
     fetchCoursesData();
   }, []);
 
-  const handleDeleteStudent = async (studentId) => {
-    Modal.confirm({
-      title: "Confirm Deletion",
-      content: "Are you sure you want to delete this student?",
-      onOk: async () => {
+    const handleDeleteStudent = async (studentId) => {
         try {
-          await deleteStudent(studentId, token);
-          setStudents(students.filter((student) => student._id !== studentId));
+            let totalRemainingBalance = 0;
+
+            for (const student of students) {
+                if (student._id === studentId) {
+                    for (const enrollment of student.enrollments) {
+                        const paymentsTotal = enrollment.payments.reduce(
+                            (total, payment) => total + payment.amount,
+                            0
+                        );
+                        const remainingBalance = enrollment.costAfterDiscount - paymentsTotal;
+                        totalRemainingBalance += remainingBalance;
+                    }
+                    break;
+                }
+            }
+
+            if (totalRemainingBalance === 0) {
+                // If there are no outstanding balances, show confirmation message
+                Modal.confirm({
+                    title: 'Confirm Deletion',
+                    content: 'Are you sure you want to delete this student?',
+                    onOk: async () => {
+                        try {
+                            const result = await deleteStudent(studentId);
+                            if (!result.error) {
+                                setStudents(
+                                    students.filter((student) => student._id !== studentId)
+                                );
+                                message.success('Student deleted successfully');
+                            } else {
+                                message.error(result.error); // Display API error message
+                            }
+                        } catch (error) {
+                            message.error(error.message); // Display error message from API call
+                        }
+                    },
+                });
+            } else {
+                // If there are outstanding balances, show error message
+                Modal.error({
+                    title: 'Cannot Delete Student',
+                    content: `There are outstanding balances totaling ${totalRemainingBalance} for this student. Please clear them before deleting.`,
+                });
+            }
         } catch (error) {
-          setError(error.message);
+            message.error(error.message); // Display error message from balance calculation
         }
-      },
-      onCancel() {
-        // Do nothing if user cancels deletion
-      },
-    });
-  };
+    };
+    const handleUpdateSubmit = async (updateStudentData) => {
+        try {
+           const result =  await updateStudents(updateStudentData._id, updateStudentData, token);
+           console.log("result:",result);
 
-  const handleUpdateSubmit = async (updateStudentData) => {
-    try {
-      await updateStudents(updateStudentData._id, updateStudentData, token);
-      setShowUpdateForm(false);
-      setSelectedStudent(null);
+            if (result.error) {
+                message.error(result.error);
+                return;
+            }
+            
+            setShowUpdateForm(false);
+            setSelectedStudent(null);
+ 
+            const updatedStudentsData = await fetchStudents(token);
+            if (!Array.isArray(updatedStudentsData)) {
+                message.error(updatedStudentsData.error);
+                return;
+            }
 
-      const updatedStudentsData = await fetchStudents(token);
-      setStudents(updatedStudentsData);
-    } catch (error) {
-      setError(error.message);
-    }
-  };
+            if (updatedStudentsData.error) {
+                message.error(updatedStudentsData.error);
+                return;
+            }
+            setStudents(updatedStudentsData);
+            message.success(result.message);
+        } catch (error) {
+            setError(error.message);
+            // message.error(error);
+            
+        }
+    };
 
-  const handleUpdateStudent = async (studentId) => {
-    try {
-      const studentData = await getStudentById(studentId);
-      setSelectedStudent(studentData);
-      setShowUpdateForm(true);
-    } catch (error) {
-      setError(error.message);
-    }
-  };
-
+    const handleUpdateStudent = async (studentId) => {
+        try {
+            const studentData = await getStudentById(studentId);
+            if(studentData.error){
+                message.error(studentData.error);
+                return;
+            }
+            setSelectedStudent(studentData);
+            setShowUpdateForm(true);
+        } catch (error) {
+            setError(error.message);
+        }
+    };
   const handleCloseUpdateForm = () => {
     setShowUpdateForm(false);
   };
@@ -114,86 +183,112 @@ const StudentList = ({ token }) => {
     navigate("/addStudent");
   };
 
-  const handleOpenAddPaymentModal = async (enrollmentId, costAfterDiscount, remainingBalanceAfterPayment) => {
-    try {
+  
+    const handleOpenAddPaymentModal = async (
+        enrollmentId,
+        costAfterDiscount,
+        remainingBalanceAfterPayment
+    ) => {
+        try {
+            const studentsData = await fetchStudents(token);
+            console.log('studentsData:', studentsData); // Add this line to inspect the data structure
 
-      // Fetch the updated list of students
-      const studentsData = await fetchStudents(token);
-  
-      // Find the student with the relevant enrollment
-      const student = studentsData.find((student) =>
-        student.enrollments.some((enrollment) => enrollment._id === enrollmentId)
-      );
-  
-      // Find the specific enrollment within the selected student's enrollments
-      const enrollment = student.enrollments.find(
-        (enrollment) => enrollment._id === enrollmentId
-      );
-  
-      if (!student || !enrollment) {
-        console.error('Student or enrollment not found');
-        return;
-      }
-  
-      // If costAfterDiscount and remainingBalanceAfterPayment are not provided, calculate them
-      if (remainingBalanceAfterPayment === undefined) {
-        const paymentsTotal = enrollment.payments.reduce(
-          (total, payment) => total + payment.amount,
-          0
-        );
-        remainingBalanceAfterPayment = costAfterDiscount - paymentsTotal;
-   
-      }
-      // Open the add payment modal with the calculated values
-      setSelectedEnrollmentId(enrollmentId);
-      setCostAfterDiscount(costAfterDiscount);
-      setRemainingBalanceAfterPayment(remainingBalanceAfterPayment);
-      setShowAddPaymentModal(true);
-    } catch (error) {
-      console.error('Error opening add payment modal:', error);
-      setError(error.message || 'Failed to open add payment modal');
-    }
-  };
-  
-  const handleCloseAddPaymentModal = () => {
+            if (!Array.isArray(studentsData)) {
+                message.error(studentsData.error);
+                return;
+            }
+
+            if (studentsData.error) {
+                message.error(studentsData.error.message);
+                return;
+            }
+
+            const student = studentsData.find((student) =>
+                student.enrollments.some((enrollment) => enrollment._id === enrollmentId)
+            );
+
+            if (!student) {
+                console.error('Student not found');
+                return;
+            }
+
+            const enrollment = student.enrollments.find(
+                (enrollment) => enrollment._id === enrollmentId
+            );
+
+            if (!enrollment) {
+                console.error('Enrollment not found');
+                return;
+            }
+
+            if (remainingBalanceAfterPayment === undefined) {
+                const paymentsTotal = enrollment.payments.reduce(
+                    (total, payment) => total + payment.amount,
+                    0
+                );
+                remainingBalanceAfterPayment = costAfterDiscount - paymentsTotal;
+            }
+
+            setSelectedEnrollmentId(enrollmentId);
+            setCostAfterDiscount(costAfterDiscount);
+            setRemainingBalanceAfterPayment(remainingBalanceAfterPayment);
+            setShowAddPaymentModal(true);
+        } catch (error) {
+            console.error('Error opening add payment modal:', error);
+            setError(error.message || 'Failed to open add payment modal');
+        }
+    };
+    
+    const handleCloseAddPaymentModal = () => {
     setShowAddPaymentModal(false);
   };
-  const handleAddPayment = async (enrollmentId, paymentData) => {
-    try {
-      await addPayment(enrollmentId, paymentData);
-      // Update payment details for the specific enrollment
-      const updatedStudents = students.map((student) => {
-        const updatedEnrollments = student.enrollments.map((enrollment) => {
-          if (enrollment._id === enrollmentId) {
-            enrollment.payments.push(paymentData);
-          }
-          return enrollment;
-        });
-        return { ...student, enrollments: updatedEnrollments };
-      });
-      setStudents(updatedStudents);
-      setShowAddPaymentModal(false); // Close the modal after adding payment
 
-      // Update payment details for the modal if it's open for the same enrollment
-      if (selectedEnrollmentIdForPaymentDetails === enrollmentId) {
-        const updatedEnrollment = updatedStudents
-          .find((student) =>
-            student.enrollments.some(
-              (enrollment) => enrollment._id === enrollmentId
-            )
-          )
-          .enrollments.find((enrollment) => enrollment._id === enrollmentId);
-        setPaymentDetails(updatedEnrollment.payments);
-      }
-    } catch (error) {
-      setError(error.message || "Failed to add payment");
-    }
-  };
+    const handleAddPayment = async (enrollmentId, paymentData) => {
+        try {
+            await addPayment(enrollmentId, paymentData);
 
+            // Find the student and update the local state for the specific enrollment
+            const updatedStudents = students.map(student => {
+                const updatedEnrollments = student.enrollments.map(enrollment => {
+                    if (enrollment._id === enrollmentId) {
+                        return {
+                            ...enrollment,
+                            payments: [...enrollment.payments, paymentData], // Add new payment locally
+                        };
+                    }
+                    return enrollment;
+                });
+                return {
+                    ...student,
+                    enrollments: updatedEnrollments,
+                };
+            });
+
+            setStudents(updatedStudents); // Update students state with the modified enrollment
+            setPaymentDetails((prevDetails) => [...prevDetails, paymentData]); // Update payment details state
+        } catch (error) {
+            console.error("Error adding payment:", error);
+            message.error("Failed to add payment. Please try again.");
+        }
+    };
 
   const handleViewPaymentDetails = async (enrollmentId, studentName) => {
     try {
-      const student = students.find((student) =>
+        const token = localStorage.getItem('token');
+        
+        const  students=  await studentService.getAllStudents(token);
+
+        if (!Array.isArray(students)) {
+            message.error(students.error);
+            return;
+        }
+
+        if (students.error) {
+            message.error(students.error.message);
+            return;
+        }
+        
+        const student = students.find((student) =>
         student.enrollments.some(
           (enrollment) => enrollment._id === enrollmentId
         )
@@ -203,12 +298,13 @@ const StudentList = ({ token }) => {
       );
       setPaymentDetails(enrollment.payments);
       setSelectedEnrollmentIdForPaymentDetails(enrollmentId);
-      setSelectedStudentName(studentName);
+      setSelectedStudentName(studentName); // Set the correct student name here
       setPaymentDetailsModalVisible(true);
     } catch (error) {
       setError(error.message || "Failed to fetch payment details");
     }
   };
+
   const handleClosePaymentDetailsModal = () => {
     setPaymentDetails([]);
     setSelectedEnrollmentIdForPaymentDetails(null);
@@ -228,6 +324,7 @@ const StudentList = ({ token }) => {
   const handleCloseEnrollmentModal = () => {
     setEnrollmentModalVisible(false);
   };
+
   const columns = [
     {
       title: "Name",
@@ -248,7 +345,7 @@ const StudentList = ({ token }) => {
       title: "Enrollments",
       dataIndex: "enrollments",
       key: "enrollments",
-      render: (enrollments, record) => (
+      render: (enrollments) => (
         <div>
           <Button onClick={() => handleViewEnrollments(enrollments)}>
             View Enrollments
@@ -258,7 +355,7 @@ const StudentList = ({ token }) => {
             visible={enrollmentModalVisible}
             onCancel={handleCloseEnrollmentModal}
             footer={null}
-            width={800} // Set the width of the modal
+            width={800}
           >
             <Table
               columns={[
@@ -267,20 +364,20 @@ const StudentList = ({ token }) => {
                   dataIndex: "course",
                   key: "courseTitle",
                   render: (course) => course.title,
-                  width: "25%", // Set the width of the column
+                  width: "25%",
                 },
                 {
                   title: "Cost",
                   dataIndex: "course",
                   key: "courseCost",
                   render: (course) => course.cost,
-                  width: "15%", // Set the width of the column
+                  width: "15%",
                 },
                 {
                   title: "Cost After Discount",
                   dataIndex: "costAfterDiscount",
                   key: "costAfterDiscount",
-                  width: "20%", // Set the width of the column
+                  width: "20%",
                 },
                 {
                   title: "Schedule",
@@ -294,24 +391,27 @@ const StudentList = ({ token }) => {
                           course.schedule.time
                         }`
                       : "Not specified",
-                  width: "30%", // Set the width of the column
+                  width: "30%",
                 },
                 {
                   title: "Actions",
                   key: "actions",
-                  render: (_, enrollment) => (
+
+                  render: (name, enrollment) => (
                     <div>
                       <Button
-                        onClick={() =>
-                          handleViewPaymentDetails(
-                            enrollment._id,
-                            record.name, // Pass student name to view payment details
-                         
-                            )
-                        }
+                         onClick={() => {
+                          const enrollmentId = enrollment._id;
+                          const studentId = enrollment.student; // Assuming this is how you access student ID in enrollment
+                          const student = students.find(student => student._id === studentId);
+                          const studentName = student ? student.name : 'Unknown'; // Fallback if student is not found
+
+                          handleViewPaymentDetails(enrollmentId, studentName);
+                        }}
+
                         style={{ marginRight: 8 }}
                       >
-                       View Payments
+                        View Payments
                       </Button>
                       <Button
                         onClick={() =>
@@ -326,13 +426,13 @@ const StudentList = ({ token }) => {
                       </Button>
                     </div>
                   ),
-                  width: "10%", // Set the width of the column
+                  width: "10%",
                 },
               ]}
               dataSource={selectedEnrollments}
               pagination={false}
               rowKey={(enrollment) => enrollment._id}
-              scroll={{ x: "100%" }} // Ensure horizontal scrolling if content exceeds modal width
+              scroll={{ x: "100%" }}
             />
           </Modal>
         </div>
@@ -353,14 +453,11 @@ const StudentList = ({ token }) => {
       ),
     },
   ];
-  
+
   if (loading) {
-    return <div>Loading...</div>;
+    return  <Spin tip="Loading courses..." />
   }
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
 
   return (
     <div>
@@ -383,13 +480,19 @@ const StudentList = ({ token }) => {
         </Col>
       </Row>
 
-      {students.length === 0 ? (
+      {students.length === 0 || !students? (
         <div>You don't have any students yet</div>
       ) : (
         <div style={{ overflowX: "auto" }}>
           <Table columns={columns} dataSource={students} />
         </div>
       )}
+
+      {error === "Token expired or invalid. Please log in again." ? (
+          <Button onClick={handleLogout} style={{marginTop:"20px"}}>
+            Login again
+          </Button>
+      ):null}
 
       <Modal
         title="Update Student"
@@ -413,12 +516,13 @@ const StudentList = ({ token }) => {
         onAddPayment={handleAddPayment}
         visible={showAddPaymentModal}
         onCancel={handleCloseAddPaymentModal}
-        costAfterDiscount={costAfterDiscount} // Pass costAfterDiscount prop
-        remainingBalanceAfterPayment={remainingBalanceAfterPayment} // Pass remainingBalanceAfterPayment prop
+        costAfterDiscount={costAfterDiscount}
+        error = {error}
+        remainingBalanceAfterPayment={remainingBalanceAfterPayment}
       />
 
       <Modal
-        title={`Payment Details for ${selectedStudentName}`} // Display student name in the modal title
+        title={`Payment Details for ${selectedStudentName}`}
         visible={paymentDetailsModalVisible}
         onCancel={handleClosePaymentDetailsModal}
         footer={[
@@ -457,3 +561,9 @@ const StudentList = ({ token }) => {
 };
 
 export default StudentList;
+
+
+
+
+
+

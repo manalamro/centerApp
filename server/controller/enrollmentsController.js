@@ -3,6 +3,7 @@ const Enrollment = require('../models/enrollmentsModel');
 const Student = require('../models/studentsModel');
 const CenterOperationalCosts = require('../models/operationSchema');
 const { json } = require('react-router-dom');
+const Manager = require('../models/managersModel');
 
 // Controller to get enrollments for a specific student by their ID and populate course details
 exports.getEnrollmentsDetailsForStudents = async (req, res) => {
@@ -56,6 +57,7 @@ exports.getAllEnrollments = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
  // Controller to get enrollments for a specific course by its ID and return the number of students
 exports.getEnrollmentsByCourse = async (req, res) => {
   try {
@@ -272,17 +274,25 @@ exports.getMostFamousCourse = async (req, res) => {
 
 exports.getEnrollmentsByMonth = async (req, res) => {
   try {
-    const managerId = req.manager._id;
+    const managerId = req?.manager?._id;
+
+    if (!managerId) {
+      return res.status(400).json({ error: 'Manager ID not found in request' });
+    }
 
     // Fetch the courses managed by the manager
     const courses = await Course.find({ manager: managerId });
+
     if (!courses.length) {
       return res.status(404).json({ error: 'No courses found for this manager' });
     }
 
-    const enrollments = await Enrollment.find({ course: { $in: courses.map(course => course._id) } })
-      .populate('course', 'title')
-      .populate('student', '_id');
+    // Extract course IDs from the fetched courses
+    const courseIds = courses.map(course => course._id);
+
+    const enrollments = await Enrollment.find({ course: { $in: courseIds } })
+        .populate('course', 'title')
+        .populate('student', '_id');
 
     if (!enrollments.length) {
       return res.status(404).json({ error: 'No enrollments found' });
@@ -298,6 +308,7 @@ exports.getEnrollmentsByMonth = async (req, res) => {
     const monthlyEnrollments = {};
 
     enrollments.forEach(enrollment => {
+      // Check if createdAt is a valid Date
       if (enrollment.createdAt && enrollment.createdAt instanceof Date) {
         const date = new Date(enrollment.createdAt);
         const monthName = monthNames[date.getMonth()];
@@ -309,8 +320,14 @@ exports.getEnrollmentsByMonth = async (req, res) => {
           monthlyEnrollments[monthYear] = {};
         }
 
-        const courseTitle = enrollment.course.title;
-        const studentId = enrollment.student._id;
+        // Safely access the course title and student ID
+        const courseTitle = enrollment.course?.title;
+        const studentId = enrollment.student?._id;
+
+        if (!courseTitle || !studentId) {
+          console.warn(`Enrollment data is missing course title or student ID for enrollment ID: ${enrollment._id}`);
+          return;
+        }
 
         // Initialize entry for course if not present
         if (!monthlyEnrollments[monthYear][courseTitle]) {
@@ -319,6 +336,8 @@ exports.getEnrollmentsByMonth = async (req, res) => {
 
         // Add student ID to the set for the course
         monthlyEnrollments[monthYear][courseTitle].add(studentId);
+      } else {
+        console.warn(`Invalid createdAt date for enrollment ID: ${enrollment._id}`);
       }
     });
 
@@ -329,8 +348,10 @@ exports.getEnrollmentsByMonth = async (req, res) => {
       }
     }
 
+    // Return the monthly enrollments data as JSON
     res.json(monthlyEnrollments);
   } catch (error) {
+    // Catch and return any server errors
     res.status(500).json({ error: error.message });
   }
 };
@@ -399,97 +420,6 @@ exports.getProfitFromEachCourse = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
-// exports.getTotalRevenueByMonth = async (req, res) => {
-//   try {
-//     const managerId = req.manager._id;
-
-//     // Fetch the courses managed by the manager
-//     const courses = await Course.find({ manager: managerId });
-//     if (!courses.length) {
-//       return res.status(404).json({ error: 'No courses found for this manager' });
-//     }
-
-//     // Fetch enrollments for the manager's courses
-//     const enrollments = await Enrollment.find({ course: { $in: courses.map(course => course._id) } })
-//       .populate('course')
-//       .populate('student');
-
-//     // If no enrollments found, return 404 with error message
-//     if (!enrollments.length) {
-//       return res.status(404).json({ error: 'No enrollments found' });
-//     }
-
-//     // Object to store net profit by month
-//     const netProfitByMonth = [];
-//     let netProfitByMonthFromCenter = 0;
-
-//     // Iterating through each enrollment
-//     enrollments.forEach(enrollment => {
-//       const date = new Date(enrollment.createdAt);
-//       const monthYear = `${date.getMonth() + 1}-${date.getFullYear()}`;
-
-//       // Calculate cost after discount and subtract teacher's profit
-//       const costAfterDiscount = enrollment.course.cost * (1 - (enrollment.student.discount || 0) / 100);
-//       const teacherPercentOfProfit = enrollment.course.teachers[0].percentOfProfit || 0;
-//       const costAfterTeacherProfit = costAfterDiscount * (1 - teacherPercentOfProfit / 100);
-
-//       // Calculate net profit for the center
-//       const operationalCosts = enrollment.course.operationalCosts.reduce((acc, cost) => acc + cost.price, 0);
-//       const centerProfit = costAfterTeacherProfit - operationalCosts;
-//       netProfitByMonthFromCenter = centerProfit;
-
-//       // Add the net profit to the existing value for the monthYear key
-//     });
-
-//     // Fetch center operational costs for the manager
-//     const centerOperationalCosts = await CenterOperationalCosts.findOne({ manager: managerId });
-
-//     // If centerOperationalCosts is undefined or doesn't have the expected structure, set totalCenterOperationCosts to 0
-//     if (!centerOperationalCosts || !centerOperationalCosts.months) {
-//       const result = Object.values(netProfitByMonth).map(({ month, netProfit }) => ({
-//         month,
-//         netProfit,
-//         totalCenterOperationCosts: 0,
-//         theFinalRevenue: 0,
-//       }));
-//       return res.json(result);
-//     }
-    
-
-//     // Iterate through center operational costs and subtract them from net profit by month
-//     centerOperationalCosts.months.forEach(month => {
-//       month.operations.forEach(operation => {
-//         const monthYear = `${month.name}-${operation.date.getFullYear()}`;
-//         const totalOperationsCost = operation.price;
-
-//         if (netProfitByMonth[monthYear]) {
-//           netProfitByMonth[monthYear].totalCenterOperationCosts += totalOperationsCost;
-//         } else {
-//           // Initialize the net profit for this month as negative of totalOperationsCost
-//           netProfitByMonth[monthYear] = {
-//             month: monthYear,
-//             netProfit: netProfitByMonthFromCenter,
-//             totalCenterOperationCosts: totalOperationsCost
-//           };
-//         }
-//       });
-//     });
-
-//     // Sending the netProfitByMonth object as JSON response
-//     const result = Object.values(netProfitByMonth).map(({ month, netProfit, totalCenterOperationCosts }) => ({
-//       month,
-//       netProfit,
-//       totalCenterOperationCosts,
-//       theFinalRevenue: netProfit - totalCenterOperationCosts,
-//     }));
-//     res.json(result);
-//   } catch (error) {
-//     // If any error occurs during execution, return 500 with error message
-//     res.status(500).json({ error: error.message });
-//   }
-// };
-
 exports.getTotalRevenueByMonth = async (req, res) => {
   try {
     const managerId = req.manager._id;
@@ -502,29 +432,37 @@ exports.getTotalRevenueByMonth = async (req, res) => {
 
     // Fetch enrollments for the manager's courses
     const enrollments = await Enrollment.find({ course: { $in: courses.map(course => course._id) } })
-      .populate('course')
-      .populate('student');
+        .populate('course')
+        .populate('student');
 
     if (!enrollments.length) {
       return res.status(404).json({ error: 'No enrollments found' });
     }
 
-    // Fetch center operational costs for each month
+    // Fetch center operational costs for each month.
     const centerCostsByMonth = {};
     const centerOperationalCosts = await CenterOperationalCosts.find({ manager: managerId });
+
     centerOperationalCosts.forEach(cost => {
       const date = new Date(cost.monthYear);
       const monthYear = `${date.getMonth() + 1}-${date.getFullYear()}`;
+
+      // Initialize the center cost for each month
       if (!centerCostsByMonth[monthYear]) {
         centerCostsByMonth[monthYear] = 0;
       }
+
+      // Sum up operations for each month only once
       cost.operations.forEach(operation => {
         centerCostsByMonth[monthYear] += operation.price;
       });
     });
 
+    console.log('Center Costs by Month:', centerCostsByMonth); // Debugging
+
     // Calculate net profit for each enrollment by month
     const revenueByMonth = {};
+
     enrollments.forEach(enrollment => {
       const date = new Date(enrollment.createdAt);
       const monthYear = `${date.getMonth() + 1}-${date.getFullYear()}`;
@@ -539,20 +477,45 @@ exports.getTotalRevenueByMonth = async (req, res) => {
         };
       }
 
-      const costAfterDiscount = enrollment.course.cost * (1 - (enrollment.student.discount || 0) / 100);
-      const teacherProfit = enrollment.course.teachers[0].percentOfProfit / 100 * costAfterDiscount;
+      // Calculate the discounted cost for each enrollment
+      const discount = enrollment.student?.discount || 0;
+      const costAfterDiscount = enrollment.course.cost * (1 - discount / 100);
+
+      // Calculate the profit share for the teacher
+      const teacherProfit = enrollment.course.teachers[0]?.percentOfProfit / 100 * costAfterDiscount || 0;
+
+      // Calculate the operational costs related to this specific course
       const operationalCosts = enrollment.course.operationalCosts.reduce((acc, cost) => acc + cost.price, 0);
+
+      // Initial net profit calculation for the current enrollment
       const initialNetProfit = costAfterDiscount - teacherProfit - operationalCosts;
-      const finalNetProfit = initialNetProfit - revenueByMonth[monthYear].centerOperationsCosts;
 
       // Accumulate initial net profit for the month
       revenueByMonth[monthYear].initialNetProfit += initialNetProfit;
-      // Accumulate final net profit for the month (if negative, set to 0)
-      revenueByMonth[monthYear].finalNetProfit += Math.max(finalNetProfit, 0);
     });
 
-    // Sending the revenueByMonth object as JSON response
-    res.json(Object.values(revenueByMonth));
+    // Calculate final net profit for each month once
+    Object.keys(revenueByMonth).forEach(monthYear => {
+      const revenue = revenueByMonth[monthYear];
+
+      // Deduct center operations costs from the total initial net profit for the month
+      const finalNetProfit = revenue.initialNetProfit - revenue.centerOperationsCosts;
+
+      // Ensure final net profit does not go below zero
+      revenue.finalNetProfit = Math.max(finalNetProfit, 0);
+
+      // Debugging
+      console.log(`Month: ${monthYear}`);
+      console.log(`Initial Net Profit: ${revenue.initialNetProfit}`);
+      console.log(`Center Operations Costs: ${revenue.centerOperationsCosts}`);
+      console.log(`Final Net Profit: ${revenue.finalNetProfit}`);
+    });
+
+    // Convert revenueByMonth object into an array of objects for response
+    const revenueByMonthArray = Object.values(revenueByMonth);
+
+    // Send the revenueByMonthArray as JSON response
+    res.json(revenueByMonthArray);
   } catch (error) {
     // If any error occurs during execution, return 500 with an error message
     res.status(500).json({ error: error.message });

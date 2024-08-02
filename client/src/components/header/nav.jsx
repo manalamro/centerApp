@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-import { Layout, Menu, Button } from "antd";
-import { IoHomeOutline } from "react-icons/io5";
+import React, { useEffect, useState } from "react";
+import { Layout, Menu, Button, message } from "antd";
+import { IoHomeOutline, IoLogOut } from "react-icons/io5";
 import { GiBlackBook } from "react-icons/gi";
 import { PiStudentFill } from "react-icons/pi";
-import { GiTeacher } from "react-icons/gi";
-import { IoLogOut } from "react-icons/io5";
+import { GiTeacher, GiFiles } from "react-icons/gi";
+import { RiAdminFill, RiUserSettingsFill } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../../hooks/useAuth'; // Import useAuth hook
 import "./header.css";
@@ -13,7 +13,8 @@ const { Sider } = Layout;
 
 const NavComponent = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout} = useAuth();
+  const [role, setRole]= useState(localStorage.getItem('role'))
   const [smallScreen, setSmallScreen] = useState(false);
 
   const handleLogout = async () => {
@@ -21,12 +22,45 @@ const NavComponent = () => {
       await logout();
       navigate('/login');
     } catch (error) {
+      message.error(error);
     }
   };
 
-  if (!isAuthenticated) {
-    return null; // If not authenticated, don't render the navigation component
-  }
+  useEffect(() => {
+    if (role === '' || role === undefined || !isAuthenticated) {
+      return null; // If role is not set, don't render the navigation component
+    }
+  }, [role]);
+
+  const menuItems = role === 'manager' ? [
+    {
+      key: "/home",
+      icon: <IoHomeOutline />,
+      label: "Home",
+    },
+    {
+      key: "/courses",
+      icon: <GiBlackBook />,
+      label: "Courses",
+    },
+    {
+      key: "/students",
+      icon: <PiStudentFill />,
+      label: "Students",
+    },
+    {
+      key: "/teachers",
+      icon: <GiTeacher />,
+      label: "Teachers",
+    },
+  ] : role === 'admin' ? [
+    {
+      key: "/AdminHome",
+      icon: <RiAdminFill />,
+      label: "Home",
+    },
+    
+  ] : [];
 
   return (
     <Sider
@@ -59,41 +93,18 @@ const NavComponent = () => {
         }}
         theme="dark"
         mode="inline"
-        // defaultSelectedKeys={["/home"]}
-        items={[
-          {
-            key: "/home",
-            icon: <IoHomeOutline />,
-            label: "Home",
-          },
-          {
-            key: "/courses",
-            icon: <GiBlackBook />,
-            label: "Courses",
-          },
-          {
-            key: "/students",
-            icon: <PiStudentFill />,
-            label: "Students",
-          },
-          {
-            key: "/teachers",
-            icon: <GiTeacher />,
-            label: "Teachers",
-          },
-        ]}
+        items={menuItems}
       />
       {!smallScreen ? (
         <Button className="logoutButton" onClick={handleLogout}>
           <IoLogOut />
           Logout
         </Button>
-      ):(
-      // <span style={{display:"flex",justifyContent:"center",flexDirection:"row",paddingTop:"10px",fontWeight:"bold"}}>
-      <Button onClick={handleLogout} style={{paddingLeft:"18px",fontSize:"medium",alignItems:"center",border:"none",borderTopRightRadius:"0px",fontFamily:'monospace'}}>
-      LogOut
-      </Button>
-   )}
+      ) : (
+        <Button onClick={handleLogout} style={{ paddingLeft: "18px", fontSize: "medium", alignItems: "center", border: "none", borderTopRightRadius: "0px", fontFamily: 'monospace' }}>
+          LogOut
+        </Button>
+      )}
     </Sider>
   );
 };

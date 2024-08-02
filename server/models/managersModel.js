@@ -16,11 +16,20 @@ const managerSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  role: {
+    type: String,
+    default: 'manager'
+  },
+  phoneNumber:{
+    type:String,
+    required:true
+  },
   resetToken: String,
   resetTokenExpiration: Date,
   courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
   students: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Student' }],
-  centerOperationalCosts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'CenterOperationalCosts' }]
+  centerOperationalCosts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'CenterOperationalCosts' }],
+  adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
 });
 
 managerSchema.pre('save', async function (next) {

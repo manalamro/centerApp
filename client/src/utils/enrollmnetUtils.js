@@ -63,21 +63,13 @@ export const addPayment = async (enrollmentId, paymentData) => {
   }
 };
 
-
-
-
-
 export const fetchEnrollmentsByMonth = async () => {
   try {
     const token = localStorage.getItem('token');
     return await enrollmentService.getEnrollmentsByMonth(token); // Assuming your service method is named getEnrollmentsByMonth
   } catch (error) {
-    if (error.response && error.response.status === 404) {
-      message.warning('No enrollments found'); // Display a warning message if no enrollments are found
-    } else {
-      message.error('Failed to fetch enrollments by month'); // Display an error message for other errors
-    }
     throw error;
+    
   }
 };
 
@@ -86,11 +78,6 @@ export const fetchMostFamousCourse = async () => {
     const token = localStorage.getItem('token');
     return await enrollmentService.getMostFamousCourse(token); // Assuming your service method is named getMostFamousCourse
   } catch (error) {
-    if (error.response && error.response.status === 404) {
-      message.warning('No most famous course found'); // Display a warning message if no most famous course is found
-    } else {
-      message.error('Failed to fetch most famous course'); // Display an error message for other errors
-    }
     throw error;
   }
 };
@@ -100,11 +87,6 @@ export const fetchProfitFromEachCourse = async () => {
     const token = localStorage.getItem('token');
     return await enrollmentService.getProfitFromEachCourse(token); // Assuming your service method is named getProfitFromEachCourse
   } catch (error) {
-    if (error.response && error.response.status === 404) {
-      message.warning('No profit from each course found'); // Display a warning message if no profit from each course is found
-    } else {
-      message.error('Failed to fetch profit from each course'); // Display an error message for other errors
-    }
     throw error;
   }
 };
@@ -114,11 +96,6 @@ export const TotalRevenueByMonth = async () => {
     const token = localStorage.getItem('token');
     return await enrollmentService.TotalRevenueByMonth(token); // Assuming your service method is named getTotalRevenueByMonth
   } catch (error) {
-    if (error.response && error.response.status === 404) {
-      message.warning('No total revenue by month found'); // Display a warning message if no total revenue by month is found
-    } else {
-      message.error('Failed to fetch Total Revenue By Month'); // Display an error message for other errors
-    }
     throw error;
   }
 };

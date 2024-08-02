@@ -3,31 +3,77 @@ const Manager = require('../models/managersModel');
 const jwt = require('jsonwebtoken');
 const Enrollment = require('../models/enrollmentsModel');
 
-// Get courses for the logged-in manager
 const getCourses = async (req, res) => {
   try {
-    const token = req.header('Authorization').replace('Bearer ', '');
-    const decoded = jwt.verify(token, 'your-secret-key');
-    const manager = await Manager.findOne({ _id: decoded.id });
+    // Extract token from request headers
+    const token = req.header('Authorization')?.replace('Bearer ', '');
 
-    if (!manager) {
-      throw new Error();
+    // Check if token is provided
+    if (!token) {
+      return res.status(401).json({ status: 'error', error: 'No token provided' });
     }
 
+    let decoded;
+    try {
+      // Verify the token
+      decoded = jwt.verify(token, 'your-secret-key');
+    } catch (err) {
+      return res.status(401).json({ status: 'error', error: 'Invalid token' });
+    }
+
+    // Find the manager using the decoded token
+    const manager = await Manager.findOne({ _id: decoded.id });
+
+    // If no manager found, return a 404 error
+    if (!manager) {
+      return res.status(404).json({ status: 'error', error: 'Manager not found' });
+    }
+
+    // Fetch courses associated with the manager
     const courses = await Course.find({ manager: manager._id });
 
-    res.status(200).json({ courses });
+    // If no courses found, return an empty list
+    if (!courses || courses.length === 0) {
+      return res.status(200).json({ status: 'success', courses: [] });
+    }
+
+    // Return the list of courses
+    res.status(200).json({ status: 'success', courses });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error, check your internet connection' });
+    console.log("errorName:", error.name);
+    res.status(500).json({ status: 'error', error: 'Internal Server Error, please try again later' });
   }
 };
 
 // // Add a new course for the logged-in manager
 const addCourse = async (req, res) => {
   try {
-    const managerId = req.manager._id;
+    // Extract token from request headers
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    // Check if token is provided
+    if (!token) {
+      return res.status(401).json({ status: 'error', error: 'No token provided' });
+    }
+
+    let decoded;
+    try {
+      // Verify the token
+      decoded = jwt.verify(token, 'your-secret-key');
+    } catch (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ status: 'error', error: 'Token expired. Please log in again.' });
+      }
+      return res.status(401).json({ status: 'error', error: 'Invalid token' });
+    }
+
+    const managerId = decoded.id;
     const { title, cost, schedule, teachers, operationalCosts } = req.body;
+
+    // Check for missing fields
+    if (!title || !cost || !schedule || !teachers || !operationalCosts) {
+      return res.status(400).json({ status: 'error', error: 'Missing required fields' });
+    }
 
     const newCourse = new Course({
       title,
@@ -43,34 +89,52 @@ const addCourse = async (req, res) => {
     // Update the manager's courses array
     await Manager.findByIdAndUpdate(managerId, { $push: { courses: newCourse._id } });
 
-    res.status(201).json({ message: 'Course added successfully', course: newCourse });
+    res.status(201).json({ status: 'success', message: 'Course added successfully', course: newCourse });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error, check your internet connection' });
+    console.error("errorName:", error.name);
+    res.status(500).json({ status: 'error', error: 'Internal Server Error, please try again later' });
   }
 };
-
 const updateCourse = async (req, res) => {
   try {
+    // Extract token from request headers
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    // Check if token is provided
+    if (!token) {
+      return res.status(401).json({ status: 'error', error: 'No token provided' });
+    }
+
+    let decoded;
+    try {
+      // Verify the token
+      decoded = jwt.verify(token, 'your-secret-key');
+    } catch (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ status: 'error', error: 'Token expired. Please log in again.' });
+      }
+      return res.status(401).json({ status: 'error', error: 'Invalid token' });
+    }
+
+    const managerId = decoded.id;
     const courseId = req.params.id;
-    const managerId = req.manager._id;
     const { title, cost, schedule, teachers, operationalCosts } = req.body;
 
     // Update the course with the provided data, including the teacher details
     const updatedCourse = await Course.findByIdAndUpdate(
-      courseId,
-      {
-        title,
-        cost,
-        schedule,
-        teachers, // Update the teachers array directly
-        operationalCosts,
-      },
-      { new: true } // Return the updated course
+        courseId,
+        {
+          title,
+          cost,
+          schedule,
+          teachers, // Update the teachers array directly
+          operationalCosts,
+        },
+        { new: true } // Return the updated course
     );
 
     if (!updatedCourse) {
-      return res.status(404).json({ error: 'Course not found' });
+      return res.status(404).json({ status: 'error', error: 'Course not found' });
     }
 
     // Update the teacher details in other courses where the same teacher is assigned
@@ -85,19 +149,37 @@ const updateCourse = async (req, res) => {
       await course.save();
     }
 
-    res.status(200).json({ message: 'Course updated successfully', course: updatedCourse });
+    res.status(200).json({ status: 'success', message: 'Course updated successfully', course: updatedCourse });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error, check your internet connection' });
+    console.error("errorName:", error.name);
+    res.status(500).json({ status: 'error', error: 'Internal Server Error, please try again later' });
   }
 };
-
 
 // Delete an existing course for the logged-in manager
 const deleteCourse = async (req, res) => {
   try {
+    // Extract token from request headers
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    // Check if token is provided
+    if (!token) {
+      return res.status(401).json({ status: 'error', error: 'No token provided' });
+    }
+
+    let decoded;
+    try {
+      // Verify the token
+      decoded = jwt.verify(token, 'your-secret-key');
+    } catch (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ status: 'error', error: 'Token expired. Please log in again.' });
+      }
+      return res.status(401).json({ status: 'error', error: 'Invalid token' });
+    }
+
+    const managerId = decoded.id;
     const courseId = req.params.id;
-    const managerId = req.manager._id;
 
     // Delete all enrollments related to the course being deleted
     await Enrollment.deleteMany({ course: courseId });
@@ -106,19 +188,18 @@ const deleteCourse = async (req, res) => {
     const deletedCourse = await Course.findOneAndDelete({ _id: courseId });
 
     if (!deletedCourse) {
-      return res.status(404).json({ error: 'Course not found' });
+      return res.status(404).json({ status: 'error', error: 'Course not found' });
     }
 
     // Remove the course ID from the manager's courses array
     await Manager.findByIdAndUpdate(managerId, { $pull: { courses: courseId } });
 
-    res.status(200).json({ message: 'Course deleted successfully', course: deletedCourse });
+    res.status(200).json({ status: 'success', message: 'Course deleted successfully', course: deletedCourse });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error, check your internet connection' });
+    console.error("errorName:", error.name);
+    res.status(500).json({ status: 'error', error: 'Internal Server Error, please try again later' });
   }
 };
-
 // Controller to get a specific course by its ID for the logged-in manager
 const getCourseById = async (req, res) => {
   try {
@@ -140,13 +221,35 @@ const getCourseById = async (req, res) => {
 
 const getTeachersDetailedInfoAndCalculateSalary = async (req, res) => {
   try {
-    const managerId = req.manager._id;
+    // Extract token from request headers
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+
+    // Check if token is provided
+    if (!token) {
+      return res.status(401).json({ status: 'error', error: 'No token provided' });
+    }
+
+    let decoded;
+    try {
+      // Verify the token
+      decoded = jwt.verify(token, 'your-secret-key');
+    } catch (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ status: 'error', error: 'Token expired. Please log in again.' });
+      }
+      return res.status(401).json({ status: 'error', error: 'Invalid token' });
+    }
+
+    const managerId = decoded.id;
 
     // Find all courses for the logged-in manager
     const courses = await Course.find({ manager: managerId });
 
     if (!courses.length) {
-      return res.json('You dont have courses yet so you dont have teachers');
+      return res.status(404).json({
+        status: 'info',
+        message: 'You don’t have courses yet, so you don’t have teachers',
+      });
     }
 
     // Initialize an object to store teacher information
@@ -165,7 +268,7 @@ const getTeachersDetailedInfoAndCalculateSalary = async (req, res) => {
           // Check if enrollment has a student
           if (enrollment.student) {
             const studentDiscount = enrollment.student.discount || 0;
-            totalProfit += course.cost * (1 - (studentDiscount / 100));
+            totalProfit += course.cost * (1 - studentDiscount / 100);
           }
         }
 
@@ -187,11 +290,13 @@ const getTeachersDetailedInfoAndCalculateSalary = async (req, res) => {
             name: teacher.name,
             phone: teacher.phone,
             percentOfProfit: teacher.percentOfProfit,
-            courses: [{
-              courseId: course._id,
-              courseName: course.title,
-              salary: teacherSalary,
-            }],
+            courses: [
+              {
+                courseId: course._id,
+                courseName: course.title,
+                salary: teacherSalary,
+              },
+            ],
             totalSalary: teacherSalary,
           };
         }
@@ -201,13 +306,21 @@ const getTeachersDetailedInfoAndCalculateSalary = async (req, res) => {
     // Convert teachersInfo object to array
     const teachersArray = Object.values(teachersInfo);
 
-    res.json({ teachers: teachersArray });
+    return res.status(200).json({ status: 'success', teachers: teachersArray });
   } catch (error) {
     console.error('Error in getTeachersDetailedInfoAndCalculateSalary:', error);
-    res.status(500).json({ error: 'Internal Server Error, check your internet connection' });
+
+    // Distinguish between different error types
+    if (error.name === 'MongoError') {
+      return res.status(500).json({ status: 'error', error: 'Database Error, please contact support' });
+    }
+
+    return res.status(500).json({
+      status: 'error',
+      error: 'Internal Server Error, please try again later',
+    });
   }
 };
-
 
 const getCoursesAndCalculateSalary = async (req, res) => {
   const managerId = req.manager._id;
@@ -293,7 +406,6 @@ const searchCoursesByTitle = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error, check your internet connection' });
   }
 };
-
 
 const searchTeachersByName = async (req, res) => {
   try {

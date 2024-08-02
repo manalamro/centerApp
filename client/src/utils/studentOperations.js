@@ -2,44 +2,36 @@ import { studentService } from '../service/api'; // Import enrollmentService
 import { message } from 'antd';
 
 export const fetchStudents = async () => {
-  try {
     const token = localStorage.getItem('token');
     return await studentService.getAllStudents(token);
-  } catch (error) {
-    message.error('Failed to fetch students');
-    throw error;
-  }
 };
 
 export const updateStudents = async (studentId, studentData) => {
-  try {
-    const token = localStorage.getItem('token');
-    await studentService.updateStudent(studentId, studentData, token);
-    message.success('Student updated successfully');
-  } catch (error) {
-    message.error('Failed to update student');
-    throw error;
-  }
+    try {
+        const token = localStorage.getItem('token');
+        const res = await studentService.updateStudent(studentId, studentData, token);
+        return res;
+    }
+    catch (error){
+        return { error: error.message }; // Return the error message to be handled
+    }
 };
-
 
 export const deleteStudent = async (studentId) => {
-  try {
-    const token = localStorage.getItem('token');
-    await studentService.deleteStudent(studentId, token);
-    message.success('Student deleted successfully');
-  } catch (error) {
-    message.error('Failed to delete student');
-    throw error;
-  }
+    try {
+        const res = await studentService.deleteStudent(studentId);
+        return res;
+    } catch (error) {
+        return { error: error.message }; // Return the error message to be handled
+    }
 };
+
 
 export const getStudentById = async (studentId) => {
   try {
     const token = localStorage.getItem('token');
     return await studentService.getStudentById(studentId, token);
   } catch (error) {
-    message.error('Failed to fetch student');
     throw error;
   }
 };
@@ -74,7 +66,6 @@ export const searchStudents = async (name) => {
     const token = localStorage.getItem('token');
     return await studentService.searchStudentByName(name, token);
   } catch (error) {
-    message.error('we do not have student with this name');
     throw error;
   }
 };

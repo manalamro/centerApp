@@ -5,34 +5,30 @@ import { courseService } from '../service/api';
 import { message } from 'antd';
 
 export const fetchCourses = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    return await courseService.getCourses(token);
-  } catch (error) {
-    message('Failed to fetch courses');
+  const response = await courseService.getCourses();
+
+// Handle the case when there's an error
+  if (response.error) {
+    throw new Error(response.error);
   }
-};
+
+  return response.courses; // Return only the courses list
+}
 
 export const updateCourse = async (courseId, courseData) => {
-  try {
+
     const token = localStorage.getItem('token');
     const response = await courseService.updateCourse(courseId, courseData, token);
-    if (response.status === 200) {
-      message(response.data.message || 'success to update course');
-    }
-  } catch (error) {
-    message(error.response ? error.response.data.message : 'Failed to update course');
-  }
+    return response;
 };
 
 export const deleteCourse = async (courseId) => {
-  try {
+
     const token = localStorage.getItem('token');
-    await courseService.deleteCourse(courseId, token);
-    return 'Course deleted successfully';
-  } catch (error) {
-    throw new Error(error.response ? error.response.data.message : 'Failed to delete course');
-  }
+    const response =  await courseService.deleteCourse(courseId, token);
+    console.log(response);
+    return response;
+    
 };
 
 // Define function to fetch a course by ID

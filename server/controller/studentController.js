@@ -2,48 +2,7 @@ const Student = require('../models/studentsModel');
 const Enrollment = require('../models/enrollmentsModel');
 const Manager = require('../models/managersModel');
 const Course = require('../models/coursesModel');
-
-
-//   exports.createStudent = async (req, res) => {
-//   const managerId = req.manager._id;
-//   const { name, phone, discount, enrolledCourses } = req.body;
-
-//   try {
-//     // Ensure at least one course is provided
-//     if (!enrolledCourses || enrolledCourses.length === 0) {
-//       return res.status(400).json({ error: 'At least one course must be provided for enrollment' });
-//     }
-
-//     // Ensure the new student is associated with the logged-in manager
-//     const newStudent = await Student.create({
-//       name,
-//       phone,
-//       discount,
-//       manager: managerId,
-//       enrollments: [], // Initialize the enrollments array
-//     });
-
-//     // Enroll the student in specified courses
-//     for (const courseTitle of enrolledCourses) {
-//       // Find the course by title
-//       const course = await Course.findOne({ title: courseTitle, manager: managerId });
-
-//       // Make sure the course exists and is managed by the logged-in manager
-//       if (course) {
-//         // Create enrollment for the student in the course
-//         await Enrollment.create({
-//           student: newStudent._id,
-//           course: course._id,
-//           manager: managerId,
-//         });
-//       }
-//     }
-
-//     res.json(newStudent);
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// };
+const jwt = require('jsonwebtoken');
 
 exports.createStudent = async (req, res) => {
   const managerId = req.manager._id;
@@ -103,10 +62,9 @@ exports.updateStudent = async (req, res) => {
     if (!updatedStudent) {
       return res.status(404).json({ error: 'Student not found' });
     }
-
-    res.json(updatedStudent);
+    res.status(200).json({ status: 'success', message: 'student updated successfully', updatedStudent });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ status: 'error', error: 'Internal Server Error, please try again later' });
   }
 };
 
@@ -131,6 +89,7 @@ exports.deleteStudent = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 exports.getStudentById = async (req, res) => {
   const managerId = req.manager?._id;
   const studentId = req.params.id;
@@ -175,7 +134,7 @@ exports.getStudentById = async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching student by ID:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'something went wrong,check your internet connection and try again' });
   }
 };
 
@@ -186,11 +145,15 @@ exports.searchStudentsByName = async (req, res) => {
     // Search for students by name
     const students = await Student.find({ name: { $regex: new RegExp(name, 'i') } }).populate({
       path: 'enrollments',
-      populate: { 
+      populate: {
         path: 'course',
         select: 'title cost schedule' // Select only necessary fields from the course
       }
     });
+
+    if (!students.length) {
+      return res.status(404).json({ error: 'No students found with the specified name' });
+    }
 
     const enrichedStudents = await Promise.all(students.map(async student => {
       const studentDiscount = student.discount || 0;
@@ -199,14 +162,13 @@ exports.searchStudentsByName = async (req, res) => {
       const enrichedEnrollments = await Promise.all(student.enrollments.map(async enrollment => {
         const course = enrollment.course;
         const costAfterDiscount = course.cost * (1 - studentDiscount / 100);
-        
+
         // Calculate remaining balance after each payment
         let remainingBalance = costAfterDiscount;
         const enrichedPayments = enrollment.payments.map(payment => {
           remainingBalance -= payment.amount;
           return {
             ...payment.toObject(), // Convert Mongoose document to plain object
-            costAfterDiscount,
             remainingBalanceAfterPayment: remainingBalance // Include remaining balance after each payment
           };
         });
@@ -214,6 +176,7 @@ exports.searchStudentsByName = async (req, res) => {
         // Include required fields directly under enrollment object
         return {
           ...enrollment.toObject(), // Convert Mongoose document to plain object
+          costAfterDiscount, // Include cost after discount
           payments: enrichedPayments
         };
       }));
@@ -230,15 +193,16 @@ exports.searchStudentsByName = async (req, res) => {
     res.json({ students: enrichedStudents });
   } catch (error) {
     console.error('Error in searchStudentsByName:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    res.status(500).json({ error: 'Internal Server Error, check your internet connection' });
   }
 };
 
 exports.getAllStudents = async (req, res) => {
   try {
+
     const students = await Student.find({ manager: req.manager._id }).populate({
       path: 'enrollments',
-      populate: { 
+      populate: {
         path: 'course',
         select: 'title cost schedule' // Select only necessary fields from the course
       }
@@ -251,7 +215,7 @@ exports.getAllStudents = async (req, res) => {
       const enrichedEnrollments = await Promise.all(student.enrollments.map(async enrollment => {
         const course = enrollment.course;
         const costAfterDiscount = course.cost * (1 - studentDiscount / 100);
-        
+
         // Calculate remaining balance after each payment
         let remainingBalance = costAfterDiscount;
         const enrichedPayments = enrollment.payments.map(payment => {
@@ -282,5 +246,24 @@ exports.getAllStudents = async (req, res) => {
     res.json(enrichedStudents);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+exports.recordAttendance = async (req, res) => {
+  const { studentId, date, status, notes } = req.body;
+
+  try {
+    // Find the student by ID
+    const student = await Student.findById(studentId);
+
+    // Add new attendance record
+    student.attendance.push({ date, status, notes });
+
+    // Save the updated student document
+    await student.save();
+
+    res.status(200).json({ message: "Attendance recorded successfully" });
+  } catch (error) {
+    console.error("Error recording attendance:", error);
+    res.status(500).json({ message: "Failed to record attendance" });
   }
 };

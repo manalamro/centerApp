@@ -12,7 +12,12 @@ const UpdateOperationForm = ({ operationId, title, price, onUpdate }) => {
     const { title, price } = values;
     setUpdating(true);
     try {
-      await updateOperation(operationId, title, price);
+      const result = await updateOperation(operationId, title, price);
+      console.log("op:",result);
+      if(result.error){
+          message.error(result.error);
+          return;
+      }
       message.success("Operation updated successfully");
       onUpdate(); // Refresh operation list after update
     } catch (error) {

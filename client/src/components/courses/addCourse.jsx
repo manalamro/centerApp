@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Row, Col, Form, Input, Button, Select, TimePicker } from "antd";
 import { courseService } from "../../service/api";
-
+import {message} from "antd";
 const { Item } = Form;
 const { Option } = Select;
 
@@ -14,8 +14,7 @@ const AddCourseForm = ({ onSubmit }) => {
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [operationalCosts, setOperationalCosts] = useState([]);
 
-
-
+  
   const fetchData = async () => {
     try {
       const teachersData =await courseService.getTeachersDetailedInfoAndCalculateSalary();
@@ -58,7 +57,7 @@ const AddCourseForm = ({ onSubmit }) => {
   };
 
   // Handler for submitting the form
-  const handleSubmit = (values) => {
+  const handleSubmit = async (values) => {
     let formData = {
       title: values.title,
       teachers: [],
@@ -78,7 +77,6 @@ const AddCourseForm = ({ onSubmit }) => {
         percentOfProfit: parseInt(values.percentOfProfit), // Convert to array
       });
     } else if (selectedTeacher) {
-      // Include the teacher ID when adding an existing teacher
       formData.teachers.push({
         _id: selectedTeacher.teacherId, // Include the teacher ID
         name: selectedTeacher.name,
@@ -87,8 +85,22 @@ const AddCourseForm = ({ onSubmit }) => {
       });
     }
 
-    onSubmit(formData);
-    form.resetFields();
+    const result = await courseService.addCourse(formData);
+
+    if (result.error) {
+      // Handle error, possibly redirect to login
+      message.error(result.error);
+      // Optionally handle redirection or display an error message
+    } else {
+      // Handle successful course addition
+      message.success('Course added successfully:');
+
+      // Reset form values
+      form.resetFields(); // If you're using Ant Design Form
+      setOperationalCosts([]); // Reset operational costs state
+      setIsNewTeacher(true); // Reset new teacher flag if needed
+      setSelectedTeacher(null); // Reset selected teacher if needed
+    }
   };
 
   const handleTeacherSelect = (value) => {

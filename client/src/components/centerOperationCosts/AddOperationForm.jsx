@@ -8,12 +8,17 @@ const AddOperationForm = ({ centerId, onAdd }) => { // Accept onAdd callback fun
   const onFinish = async (values) => {
     setLoading(true);
     try {
-      await addOperationToCenter(centerId, values);
+      const result = await addOperationToCenter(centerId, values);
+      console.log("3",result);
+      if(result.error){
+        message.error(result.error);
+        return;
+      }
       message.success('Operation added successfully');
       onAdd(); // Call onAdd callback to refresh data
       // Clear form fields after successful submission if needed
     } catch (error) {
-      message.error('Failed to add operation');
+      message.error(error.message || 'Failed to add  operational');
     } finally {
       setLoading(false);
     }

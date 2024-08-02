@@ -1,10 +1,15 @@
 const CenterOperationalCosts = require('../models/operationSchema');
 
 // 1. Create Center Operational Costs
+// backend controller.
 exports.createCenterOperationalCosts = async (req, res) => {
     try {
         const { monthYear, operations } = req.body;
-        const manager = req.manager._id;
+        const manager = req.manager?._id;
+
+        if (!manager) {
+            return res.status(401);
+        }
 
         // Extract year and month from the provided monthYear date
         const monthYearDate = new Date(monthYear);
@@ -21,77 +26,218 @@ exports.createCenterOperationalCosts = async (req, res) => {
             // Add operations to the existing entry
             existingCosts.operations.push(...operations);
             await existingCosts.save();
-            res.status(200).json(existingCosts);
+            return res.status(200).json({ success: true, message: 'Operations added successfully to existing record', existingCosts });
         } else {
             // Create new CenterOperationalCosts entry
             const newCenterOperationalCosts = await CenterOperationalCosts.create({ monthYear, operations, manager });
-            res.status(201).json(newCenterOperationalCosts);
+            return res.status(201).json({ success: true, message: 'Center operational costs created successfully', newCenterOperationalCosts });
         }
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ success: false, message: 'Validation Error', details: error.message });
+        }
+        res.status(500).json({ success: false, error:'Internal Server Error check your internet connection'  });
     }
 };
-
 
 // 2. Get Center Operational Costs
 exports.getCenterOperationalCosts = async (req, res) => {
     try {
-      const manager = req.manager._id;
-      const centerOperationalCosts = await CenterOperationalCosts.find({ manager });
-        res.json(centerOperationalCosts);
+        const managerId = req.params.managerId || req.manager?._id;
+
+        // Check for valid managerId
+        if (!managerId) {
+            return res.status(401).json({
+                success: false,
+                error: 'Unauthorized: Invalid or expired token'
+            });
+        }
+
+        // Fetch center operational costs based on the manager's ID
+        const centerOperationalCosts = await CenterOperationalCosts.find({ manager: managerId });
+
+        // Check if any operational costs are found
+        if (!centerOperationalCosts || centerOperationalCosts.length === 0) {
+            return res.status(404).json({
+                success: false,
+                error: 'No center operational costs found for the specified manager'
+            });
+        }
+
+        // Send the retrieved operational costs to the client
+        res.status(200).json({
+            success: true,
+            message: 'Center operational costs retrieved successfully',
+            centerOperationalCosts
+        });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        // Log the error and send a response
+        console.error('Error retrieving center operational costs:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal Server Error check your internet connection',
+        });
     }
 };
 
-// 3. Update Operation
+// 1. Update Operation
 exports.updateOperation = async (req, res) => {
     try {
+        const managerId = req.params.managerId || req.manager?._id;
+
+        // Check for valid managerId
+        if (!managerId) {
+            return res.status(401).json({
+                success: false,
+                error: 'Unauthorized: Invalid or expired token'
+            });
+        }
+        
         const { operationId, title, price } = req.body;
+
+        // Check for missing required fields
+        if (!operationId || !title || !price) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required fields: operationId, title, and price are required'
+            });
+        }
+
+        // Update the operation
         const updatedOperation = await CenterOperationalCosts.findOneAndUpdate(
             { 'operations._id': operationId },
             { $set: { 'operations.$.title': title, 'operations.$.price': price } },
             { new: true }
         );
-        res.json(updatedOperation);
+
+        // Check if the operation was found and updated
+        if (!updatedOperation) {
+            return res.status(404).json({
+                success: false,
+                error: 'Operation not found'
+            });
+        }
+
+        // Send the updated operation to the client
+        res.status(200).json({
+            success: true,
+            message: 'Operation updated successfully',
+            updatedOperation
+        });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        // Log the error and send a response
+        console.error('Error updating operation:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal Server Error check your connection',
+        });
     }
 };
 
-// 4. Delete Operation
+// 2. Delete Operation
 exports.deleteOperation = async (req, res) => {
     try {
+        const managerId = req.params.managerId || req.manager?._id;
+
+        // Check for valid managerId
+        if (!managerId) {
+            return res.status(401).json({
+                success: false,
+                error: 'Unauthorized: Invalid or expired token'
+            });
+        }
+        
         const { operationId } = req.body;
+
+        // Check for missing required field
+        if (!operationId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required field: operationId is required'
+            });
+        }
+
+        // Delete the operation
         const deletedOperation = await CenterOperationalCosts.findOneAndUpdate(
             { 'operations._id': operationId },
             { $pull: { operations: { _id: operationId } } },
             { new: true }
         );
-        res.json(deletedOperation);
+
+        // Check if the operation was found and deleted
+        if (!deletedOperation) {
+            return res.status(404).json({
+                success: false,
+                error: 'Operation not found'
+            });
+        }
+
+        // Send the result to the client
+        res.status(200).json({
+            success: true,
+            message: 'Operation deleted successfully',
+            deletedOperation
+        });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        // Log the error and send a response
+        console.error('Error deleting operation:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal Server Error, check your internet'
+        });
     }
 };
 
-
-// Function to add an operation to an existing center's operational costs
+// 3. Add Operation to an Existing Center's Operational Costs
 exports.addOperationToCenter = async (req, res) => {
     try {
+        const managerId = req.params.managerId || req.manager?._id;
+
+        // Check for valid managerId
+        if (!managerId) {
+            return res.status(401).json({
+                success: false,
+                error: 'Unauthorized: Invalid or expired token'
+            });
+        }
+        
         const { centerId } = req.params;
         const newOperation = req.body;
 
+        // Check for missing required fields
+        if (!centerId || !newOperation) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required fields: centerId and operation details are required'
+            });
+        }
+
+        // Find the center and add the new operation
         const center = await CenterOperationalCosts.findById(centerId);
 
+        // Check if the center was found
         if (!center) {
-            return res.status(404).json({ success: false, message: 'Center not found' });
+            return res.status(404).json({
+                success: false,
+                error: 'Center not found'
+            });
         }
 
         center.operations.push(newOperation);
         await center.save();
 
-        res.status(200).json({ success: true, message: 'Operation added successfully', center });
+        // Send the updated center to the client
+        res.status(200).json({
+            success: true,
+            message: 'Operation added successfully',
+            center
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        // Log the error and send a response
+        console.error('Error adding operation to center:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal Server Error, check your internet'
+        });
     }
 };

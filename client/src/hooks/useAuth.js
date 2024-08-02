@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import {managerService} from '../service/api';
+import {managerService,adminService} from '../service/api';
 import { redirect} from 'react-router-dom';
 export const AuthContext = React.createContext();
 
@@ -12,57 +12,63 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('IsAuthenticated')); 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [token, setToken] = useState('');
+  const [role, setRole] = useState(null);
   const [username, setUsername] = useState(localStorage.getItem('username'));
-  useEffect(() => {
-    const checkAuthentication = async () => {
-      try {
-        const tokenFromStorage = localStorage.getItem('token');
-        if (tokenFromStorage) {
-          const response = await managerService.authenticate(tokenFromStorage);
-          setIsAuthenticated(response.success);
-        } else {
-          setIsAuthenticated(false);
-          redirect('/login');
-        }
-      } catch (error) {
-        setIsAuthenticated(false);
-        redirect('/login');
-      }
-    };
-
-    checkAuthentication();
-  }, []);
-
-  
+  const [error,setError] = useState(null);
   const login = async (username, password) => {
+    const response = await managerService.login(username, password);
     try {
-      const response = await managerService.login(username, password);
       localStorage.setItem('token', response.token);
+      localStorage.setItem('role', response.UserRole);
+      localStorage.setItem('IsAuthenticated',response.isAuthenticated);
       setToken(response.token);
       setUsername(username);
+      setRole(response.UserRole);
+      setIsAuthenticated(response.isAuthenticated);
       localStorage.setItem('username',username);
       setIsLoggedIn(true);
-      setIsAuthenticated(true);
     } catch (error) {
-      setIsLoggedIn(false);
-      setIsAuthenticated(false);
-      throw error;
+      setError(response.error);
+      localStorage.setItem('IsAuthenticated',response.isAuthenticated);
     }
   };
 
+  const adminLogin = async (username, password) => {
+      const response = await adminService.login(username, password);
+      try {
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('role', response.UserRole);
+        localStorage.setItem('IsAuthenticated',response.isAuthenticated);
+        setToken(response.token);
+        setUsername(username);
+        setRole(response.UserRole);
+        setIsAuthenticated(response.isAuthenticated);
+        localStorage.setItem('username',username);
+        setIsLoggedIn(true);
+      } catch (error) {
+        setError(response.error);
+        localStorage.setItem('IsAuthenticated',response.isAuthenticated);
+      }
+  };
+  
   const logout = async () => {
     try {
-      await managerService.logout();
+      const response = await managerService.logout();
       setToken('');
       localStorage.setItem('token','');
       setIsLoggedIn(false);
-      setIsAuthenticated(false);
       localStorage.setItem('username','');
       setUsername('');
+      localStorage.setItem('role','');
+      setRole('');
+      setIsAuthenticated('');
+      localStorage.setItem('IsAuthenticated','');
     } catch (error) {
+      setIsAuthenticated('');
+      localStorage.setItem('IsAuthenticated', '');
       throw error;
     }
   };
@@ -75,6 +81,8 @@ export const AuthProvider = ({ children }) => {
         token,
         login,
         logout,
+        adminLogin,
+        role,
         username
       }}
     >

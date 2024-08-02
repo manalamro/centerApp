@@ -18,6 +18,7 @@ const studentSchema = new mongoose.Schema({
     ref: 'Manager',  // Reference to the manager who manages this student
     required: true
   },
+
 }, {
   toJSON: { virtuals: true },
   toObject: { virtuals: true }

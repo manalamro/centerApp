@@ -4,10 +4,12 @@ const coursesController = require('../controller/courseController');
 const studentController = require('../controller/studentController');
 const enrollmentController = require('../controller/enrollmentsController');
 const managerController = require('../controller/managersController.js');
-const authMiddleware = require('../middleware/authMiddleware');
+const { authenticate, authenticateAdmin } = require('../middleware/authMiddleware');
 const centerOperationalCostsController = require('../controller/centerOperationCosts.js');
-
+const adminController = require('../controller/adminController.js');
+const overViewController = require('../controller/overViewController.js')
 // Register route
+router.post('/createManager', authenticateAdmin, managerController.register);
 router.post('/managers/register', managerController.register);
 
 // Login route
@@ -16,77 +18,90 @@ router.post('/managers/login', managerController.login);
 // Logout route
 router.post('/managers/logout', managerController.logout);
 
-// Authentication route
-router.get('/protected', managerController.authenticate);
+// Admin routes
+router.post('/register', adminController.register);
+router.post('/login', adminController.login);
+router.post('/logout', adminController.logout);
+router.get('/admin/managers', authenticateAdmin, adminController.getManagers); // New route
 
-// Change password route
-router.post('/managers/change-password', authMiddleware.authenticate, managerController.changePassword);
+// Change password route for managers
+router.post('/managers/change-password', authenticate, managerController.changePassword);
 
-// Forgot password route
+// Forgot password route for managers
 router.post('/managers/forgot-password', managerController.forgotPassword);
 
-// Reset password route
+// Reset password route for managers
 router.post('/managers/reset-password/:resetToken', managerController.resetPassword);
 
-// Require authentication for routes below this line
-router.use(authMiddleware.authenticate);
+// // Admin routes for password management
+router.post('/change-password', authenticateAdmin, adminController.changePassword);
+router.post('/forgot-password',adminController.forgotPassword);
+router.post('/reset-password/:resetToken',adminController.resetPassword);
+// Overview routes for admin.
+router.post('/admin/add-manager', authenticateAdmin,adminController.addManagerToAdmin);
+router.get('/totals-by-manager', authenticateAdmin, overViewController.getTotalNumbersByManager);
+router.get('/enrollment-trends-by-manager', authenticateAdmin, overViewController.getStudentEnrollmentTrendsByManager);
+router.get('/completion-rates-by-manager', authenticateAdmin, overViewController.getCourseCompletionRatesByManager);
+router.get('/financial-summaries-by-manager', authenticateAdmin, overViewController.getFinancialSummariesByManager);
+router.get('/manager/:managerId', authenticateAdmin, overViewController.getManagerDetails);
 
 // Courses Routes
 
 // Route to get detailed information about courses, teachers, and calculate salary for the logged-in manager
-router.get('/teachers/detailedInfo', coursesController.getTeachersDetailedInfoAndCalculateSalary);
+router.get('/teachers/detailedInfo', authenticate,coursesController.getTeachersDetailedInfoAndCalculateSalary);
 
 // Route to get courses for the logged-in manager
-router.get('/courses', coursesController.getCourses);
+router.get('/courses',authenticate, coursesController.getCourses);
 
 // Route to add a new course for the logged-in manager
-router.post('/courses', coursesController.addCourse);
+router.post('/courses', authenticate,coursesController.addCourse);
 
 // Route to get a specific course by its ID for the logged-in manager
-router.get('/courses/:id', coursesController.getCourseById);
+router.get('/courses/:id',authenticate,coursesController.getCourseById);
 
 // Route to update an existing course for the logged-in manager
-router.put('/courses/:id', coursesController.updateCourse);
+router.put('/courses/:id', authenticate,coursesController.updateCourse);
 
 // Route to delete an existing course for the logged-in manager
-router.delete('/courses/:id', coursesController.deleteCourse);
-router.post('/courses/search', coursesController.searchCoursesByTitle);
-router.post('/teachers/search', coursesController.searchTeachersByName);
+router.delete('/courses/:id',authenticate, coursesController.deleteCourse);
+router.post('/courses/search',authenticate, coursesController.searchCoursesByTitle);
+router.post('/teachers/search',authenticate, coursesController.searchTeachersByName);
 
 // Students Routes
 
-router.get('/students', studentController.getAllStudents);
-router.get('/students/:id', studentController.getStudentById);
-router.post('/students', studentController.createStudent);
-router.put('/students/:id', studentController.updateStudent);
-router.delete('/students/:id', studentController.deleteStudent);
-router.post('/students/search', studentController.searchStudentsByName);
+router.get('/students', authenticate,studentController.getAllStudents);
+router.get('/students/:id',authenticate, studentController.getStudentById);
+router.post('/students', authenticate,studentController.createStudent);
+router.put('/students/:id',authenticate, studentController.updateStudent);
+router.delete('/students/:id',authenticate, studentController.deleteStudent);
+router.post('/students/search',authenticate, studentController.searchStudentsByName);
 
 // Route to create Center Operational Costs
-router.post('/centerOperationalCosts', centerOperationalCostsController.createCenterOperationalCosts);
+router.post('/centerOperationalCosts',authenticate,centerOperationalCostsController.createCenterOperationalCosts);
 
 // Route to get Center Operational Costs
-router.get('/centerOperationalCosts', centerOperationalCostsController.getCenterOperationalCosts);
+router.get('/centerOperationalCosts',authenticate ,centerOperationalCostsController.getCenterOperationalCosts);
 
 // Route to update an operation
-router.put('/centerOperationalCosts/operation', centerOperationalCostsController.updateOperation);
+router.put('/centerOperationalCosts/operation',authenticate, centerOperationalCostsController.updateOperation);
 
 // Route to delete an operation
-router.delete('/centerOperationalCosts/operation', centerOperationalCostsController.deleteOperation);
+router.delete('/centerOperationalCosts/operation',authenticate, centerOperationalCostsController.deleteOperation);
 
-router.post('/centerOperationalCosts/:centerId/addOperation', centerOperationalCostsController.addOperationToCenter);
+router.post('/centerOperationalCosts/:centerId/addOperation',authenticate, centerOperationalCostsController.addOperationToCenter);
 
 // Enrollments Routes
-router.get('/enrollments', enrollmentController.getAllEnrollments);
-router.post('/enrollments', enrollmentController.createEnrollment);
-router.get('/enrollments/:id', enrollmentController.getEnrollmentById);
-router.put('/enrollments/:id', enrollmentController.updateEnrollment);
-router.delete('/enrollments/:id', enrollmentController.deleteEnrollment);
-router.get('/enrollments/teacher/:teacherName', coursesController.getCoursesAndCalculateSalary);
-router.post('/enrollments/:id/addPayment', enrollmentController.addPayment);
-router.get('/enrollments-by-month', enrollmentController.getEnrollmentsByMonth);
-router.get('/most-famous-course', enrollmentController.getMostFamousCourse);
-router.get('/profit-from-each-course', enrollmentController.getProfitFromEachCourse);
-router.get('/total-revenue-by-month', enrollmentController.getTotalRevenueByMonth);
+router.get('/enrollments',authenticate, enrollmentController.getAllEnrollments);
+router.post('/enrollments',authenticate, enrollmentController.createEnrollment);
+router.get('/enrollments/:id',authenticate, enrollmentController.getEnrollmentById);
+router.put('/enrollments/:id',authenticate, enrollmentController.updateEnrollment);
+router.delete('/enrollments/:id',authenticate, enrollmentController.deleteEnrollment);
+router.get('/enrollments/teacher/:teacherName',authenticate, coursesController.getCoursesAndCalculateSalary);
+router.post('/enrollments/:id/addPayment',authenticate, enrollmentController.addPayment);
+router.get('/enrollments-by-month', authenticate,enrollmentController.getEnrollmentsByMonth);
+router.get('/most-famous-course', authenticate,enrollmentController.getMostFamousCourse);
+router.get('/profit-from-each-course',authenticate, enrollmentController.getProfitFromEachCourse);
+router.get('/total-revenue-by-month',authenticate, enrollmentController.getTotalRevenueByMonth);
+
 
 module.exports = router;
