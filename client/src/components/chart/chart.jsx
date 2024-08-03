@@ -57,6 +57,7 @@ const EnrollmentDataCards = () => {
     fetchData();
   }, []);
 
+<<<<<<< Updated upstream
   if(error==='Token expired, please log in again' ||
       error==='Token expired or invalid. Please log in again.'){
     return (
@@ -109,6 +110,47 @@ const EnrollmentDataCards = () => {
       message.success("Your PDF file generated successfully!");
     }
   };
+=======
+
+  const generatePDF = () => {
+  const isWindowMaximized =
+    window.outerWidth === window.screen.availWidth &&
+    window.outerHeight === window.screen.availHeight;
+
+  if (!isWindowMaximized) {
+    alert(
+      "Please maximize your browser window for optimal viewing, then click Generate PDF again."
+    );
+    return;
+  } else {
+    const element = document.getElementById("pdf-content");
+
+    // Set background color of the canvas
+    const canvasOptions = {
+      backgroundColor: "rgb(228, 243, 241)", // Set the background color here
+    };
+
+    html2canvas(element, canvasOptions).then((canvas) => {
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const width = pdf.internal.pageSize.getWidth();
+      const height = pdf.internal.pageSize.getHeight();
+
+      // Set background color
+      pdf.setFillColor(228, 243, 241);
+      pdf.rect(0, 0, width, height, "F");
+
+      // Calculate scaling factor for the content
+      const scaleFactor = (width - 60) / canvas.width;
+
+      // Add scaled image to PDF
+      pdf.addImage(imgData, "PNG", 20, 10, canvas.width * scaleFactor, canvas.height * scaleFactor);
+      pdf.save("enrollment_data.pdf");
+    });
+    message.success("Your PDF file generated successfully!");
+  }
+};
+>>>>>>> Stashed changes
 
   const renderEnrollmentsTable = () => {
     const enrollmentEntries = Object.entries(enrollmentsByMonth);
@@ -331,6 +373,14 @@ const EnrollmentDataCards = () => {
           Generate PDF
         </Button>
       </div>
+<<<<<<< Updated upstream
+=======
+
+      <Button onClick={generatePDF} style={{ marginTop: 20 }}>
+        Generate PDF
+      </Button>
+ </div>
+>>>>>>> Stashed changes
   );
 };
 

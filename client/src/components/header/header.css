@@ -1,4 +1,4 @@
-:where(.css-dev-only-do-not-override-1qhpsh8).ant-menu-dark .ant-menu-item-selected, :where(.css-dev-only-do-not-override-1qhpsh8).ant-menu-dark>.ant-menu .ant-menu-item-selected {
+:where(.css-42nv3w).ant-menu-dark .ant-menu-item-selected, :where(.css-42nv3w).ant-menu-dark>.ant-menu .ant-menu-item-selected {
     background-color:rgb(255, 255, 255);
     font-size: medium;
     color:black;
@@ -16,16 +16,16 @@
     font-size: medium;
 }
 
-.ant-avatar .ant-avatar-circle .ant-avatar-image .css-dev-only-do-not-override-1k979oh{
+.ant-avatar .ant-avatar-circle .ant-avatar-image .css-42nv3w{
     width: 70px;
     height: 87px;
 
 }
-.ant-input-search :where(.css-dev-only-do-not-override-1k979oh).ant-input-group .ant-input-affix-wrapper:not(:last-child){
+.ant-input-search :where(.css-42nv3w).ant-input-group .ant-input-affix-wrapper:not(:last-child){
     border:1px solid #acacac;
 }
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-input-search >.ant-input-group >.ant-input-group-addon:last-child .ant-input-search-button:not(.ant-btn-primary) {
+:where(.css-42nv3w).ant-input-search >.ant-input-group >.ant-input-group-addon:last-child .ant-input-search-button:not(.ant-btn-primary) {
     color: rgb(255, 255, 255);
     border:none;
     background-color: rgb(0 150 135);
@@ -35,12 +35,12 @@
     
 }
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-btn.ant-btn-icon-only .anticon {
+:where(.css-42nv3w).ant-btn.ant-btn-icon-only .anticon {
     font-size: 16px;
     color: rgb(81, 80, 80);
     
 }
-:where(.css-dev-only-do-not-override-1k979oh).ant-layout.ant-layout-has-sider >.ant-layout-content{
+:where(.css-42nv3w).ant-layout.ant-layout-has-sider >.ant-layout-content{
     margin: 82px 220px;
     padding: 23px;
     min-height: 92%;
@@ -50,7 +50,7 @@
     width: 100%;
 }
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-layout .ant-layout-sider-children {
+:where(.css-42nv3w).ant-layout .ant-layout-sider-children {
     height: 100vh;
     margin-top: -0.1px;
     padding-top: 0.1px;
@@ -61,19 +61,19 @@
     fill: rgb(255, 255, 255);
 }
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-btn-default:not(:disabled):not(.ant-btn-disabled):active {
+:where(.css-42nv3w).ant-btn-default:not(:disabled):not(.ant-btn-disabled):active {
     color: #ffffff;
     border-color: #ffffff;
 }
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-btn-default:not(:disabled):not(.ant-btn-disabled):hover {
+:where(.css-42nv3w).ant-btn-default:not(:disabled):not(.ant-btn-disabled):hover {
     background-color: rgb(255, 255, 255);
     border-color: rgb(255, 255, 255);
     color: #000000;
 
 }
 
-.ant-btn .css-dev-only-do-not-override-1k979oh .ant-btn-default{
+.ant-btn .css-42nv3w .ant-btn-default{
  margin-top: 30px;
 }
 
@@ -96,7 +96,7 @@
 
 }
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-message .ant-message-notice-wrapper .ant-message-notice-content {
+:where(.css-42nv3w).ant-message .ant-message-notice-wrapper .ant-message-notice-content {
     display: inline-block;
     padding: 9px 12px;
     color: rgb(0, 0, 0);
@@ -109,34 +109,34 @@
 
 }
     @media only screen and (max-width: 768px) {
-    :where(.css-dev-only-do-not-override-1k979oh).ant-avatar .ant-avatar-circle .ant-avatar-image .css-dev-only-do-not-override-1k979oh {
+    :where(.css-42nv3w).ant-avatar .ant-avatar-circle .ant-avatar-image .css-42nv3w {
       width: 50px; 
       height: 50px; 
     }
   }
 
-  :where(.css-dev-only-do-not-override-1k979oh).ant-layout-header{
+  :where(.css-42nv3w).ant-layout-header{
     height: 64px;
     padding: 2 50px;
     line-height: 64px;
     background: #ffffff;
   } 
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-layout .ant-layout-header, :where(.css-dev-only-do-not-override-1k979oh).ant-layout.ant-layout-footer{
+:where(.css-42nv3w).ant-layout .ant-layout-header, :where(.css-42nv3w).ant-layout.ant-layout-footer{
     height: 64px;
     padding: 0 50px;
     color: rgba(0, 0, 0, 0.88);
     line-height: 64px;
 } 
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-layout-header {
+:where(.css-42nv3w).ant-layout-header {
     height: 64px;
     padding: 0 50px;
     color: rgba(0, 0, 0, 0.88);
     line-height: 64px;
 } 
 
- :where(.css-dev-only-do-not-override-1k979oh).ant-layout-header {
+ :where(.css-42nv3w).ant-layout-header {
     height: 64px;
     padding: 0 50px;
     color: rgba(0, 0, 0, 0.88);
@@ -144,17 +144,17 @@
     background-color: white;
 }
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-layout .ant-layout-header, :where(.css-dev-only-do-not-override-1k979oh).ant-layout.ant-layout-footer {
+:where(.css-42nv3w).ant-layout .ant-layout-header, :where(.css-42nv3w).ant-layout.ant-layout-footer {
     flex: 0 0 auto;
     margin-left: -1%;
 }
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-layout [class^="ant-layout"], :where(.css-dev-only-do-not-override-1k979oh).ant-layout [class*=" ant-layout"] {
+:where(.css-42nv3w).ant-layout [class^="ant-layout"], :where(.css-42nv3w).ant-layout [class*=" ant-layout"] {
     box-sizing: border-box;
 }
 
 
-:where(.css-dev-only-do-not-override-1k979oh) a {
+:where(.css-42nv3w) a {
     color: #000000;
     text-decoration: none;
     background-color: transparent;
@@ -165,7 +165,7 @@
     -webkit-text-decoration-skip: objects;
 }
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-layout-header {
+:where(.css-42nv3w).ant-layout-header {
     height: 64px;
     padding: 0px auto;
     margin-left: -6px;
@@ -174,7 +174,7 @@
     background: #ffffff;
 }
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-menu-dark .ant-menu-item, :where(.css-dev-only-do-not-override-1k979oh).ant-menu-dark>.ant-menu .ant-menu-item, :where(.css-dev-only-do-not-override-1k979oh).ant-menu-dark .ant-menu-submenu-title, :where(.css-dev-only-do-not-override-1k979oh).ant-menu-dark>.ant-menu .ant-menu-submenu-title {
+:where(.css-42nv3w).ant-menu-dark .ant-menu-item, :where(.css-42nv3w).ant-menu-dark>.ant-menu .ant-menu-item, :where(.css-42nv3w).ant-menu-dark .ant-menu-submenu-title, :where(.css-42nv3w).ant-menu-dark>.ant-menu .ant-menu-submenu-title {
     color:gainsboro;
 }
 .anticon svg {
@@ -182,20 +182,20 @@
     fill: rgb(1 1 1);
 }
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-menu-dark .ant-menu-item-selected, :where(.css-dev-only-do-not-override-1k979oh).ant-menu-dark>.ant-menu .ant-menu-item-selected {
+:where(.css-42nv3w).ant-menu-dark .ant-menu-item-selected, :where(.css-42nv3w).ant-menu-dark>.ant-menu .ant-menu-item-selected {
     background-color: #ffffff;
 }
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-menu-dark .ant-menu-item, :where(.css-dev-only-do-not-override-1k979oh).ant-menu-dark>.ant-menu .ant-menu-item, :where(.css-dev-only-do-not-override-1rqnfsa).ant-menu-dark .ant-menu-submenu-title, :where(.css-dev-only-do-not-override-1rqnfsa).ant-menu-dark>.ant-menu .ant-menu-submenu-title {
+:where(.css-42nv3w).ant-menu-dark .ant-menu-item, :where(.css-42nv3w).ant-menu-dark>.ant-menu .ant-menu-item, :where(.css-42nv3w).ant-menu-dark .ant-menu-submenu-title, :where(.css-42nv3w).ant-menu-dark>.ant-menu .ant-menu-submenu-title {
     color: #222222;
 }
-:where(.css-dev-only-do-not-override-1k979oh).ant-btn-default:not(:disabled):not(.ant-btn-disabled):active {
+:where(.css-42nv3w).ant-btn-default:not(:disabled):not(.ant-btn-disabled):active {
     color: rgb(30, 132, 126);
     border-color: #000000;
     background: #ffffff;
 }
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-btn-default:not(:disabled):not(.ant-btn-disabled):hover {
+:where(.css-42nv3w).ant-btn-default:not(:disabled):not(.ant-btn-disabled):hover {
     color: rgb(30, 132, 126);
     border-color: rgb(30, 132, 126);
     font-size: large;
@@ -203,14 +203,14 @@
 }
 
 
-.ant-layout-content.css-dev-only-do-not-override-1k979oh{
+.ant-layout-content.css-42nv3w{
 position:relative;
 padding: 13px 48px;
 margin: 50px 220px;
 width: 66vw;
 }
 
-:where(.css-dev-only-do-not-override-1k979oh).ant-menu {
+:where(.css-42nv3w).ant-menu {
     box-sizing: border-box;
     margin: 57px auto;
     padding: 0;
@@ -218,7 +218,7 @@ width: 66vw;
     font-size: 14px;
     line-height: 0;
     list-style: none;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    font-family:'Condiment - Regular';
     margin-bottom: 0;
     padding-inline-start: 0;
     outline: none;
@@ -228,5 +228,3 @@ width: 66vw;
 span.anticon.anticon-bars{
     display: none;
 }
-
-  

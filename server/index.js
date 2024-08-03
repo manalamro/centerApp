@@ -32,6 +32,10 @@ connect();
 
 // Use the routes in your application
 app.use(routes);
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 
 app.listen(5000, () => {
     console.log("Server started on port 5000");
