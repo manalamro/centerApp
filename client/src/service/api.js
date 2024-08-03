@@ -1,12 +1,7 @@
 import axios from 'axios';
 import { message } from 'antd';
-<<<<<<< Updated upstream
-export const baseURL = "http://localhost:5000";
-=======
+
 export const baseURL = "https://api.paleducenters.com";
-
-
->>>>>>> Stashed changes
 
 export const managerService = {
   register: async (username, password) => {
