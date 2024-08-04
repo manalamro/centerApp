@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { message } from 'antd';
 
-export const baseURL = "https://api.paleducenters.com";
+export const baseURL = "http://localhost:5000";
 
 export const managerService = {
   register: async (username, password) => {
